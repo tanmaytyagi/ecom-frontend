@@ -49,10 +49,10 @@ export default function Home() {
             </div>
             
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              <a href="/" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                 Home
               </a>
-              <a href="#" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              <a href="/products" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                 Products
               </a>
               <a href="#" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
@@ -89,9 +89,11 @@ export default function Home() {
               Find the latest gadgets and electronics at unbeatable prices
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-                Shop Now
-              </Button>
+              <a href="/products">
+                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+                  Shop Now
+                </Button>
+              </a>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
                 Learn More
               </Button>
@@ -163,8 +165,8 @@ export default function Home() {
             <div>
               <h4 className="font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Home</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Products</a></li>
+                <li><a href="/" className="hover:text-white transition-colors">Home</a></li>
+                <li><a href="/products" className="hover:text-white transition-colors">Products</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
