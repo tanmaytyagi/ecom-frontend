@@ -1,6 +1,7 @@
 import { Search, Filter, X } from "lucide-react";
 import { Button } from "./button";
-import { categories } from "@/lib/data";
+import { api, Category } from "@/lib/data";
+import { useEffect, useState } from "react";
 
 interface SearchFiltersProps {
   searchQuery: string;
@@ -21,6 +22,24 @@ export function SearchFilters({
   onRatingChange,
   onClearFilters,
 }: SearchFiltersProps) {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const data = await api.getCategories();
+        setCategories(data);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadCategories();
+  }, []);
+
   const hasActiveFilters = searchQuery || selectedCategory || selectedRating > 0;
 
   return (
@@ -49,11 +68,12 @@ export function SearchFilters({
           value={selectedCategory}
           onChange={(e) => onCategoryChange(e.target.value)}
           className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+          disabled={loading}
         >
           <option value="">All Categories</option>
           {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
+            <option key={category.id} value={category.name}>
+              {category.name}
             </option>
           ))}
         </select>

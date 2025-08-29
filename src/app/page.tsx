@@ -1,42 +1,50 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShoppingCart, Menu, Search, Star, Heart } from "lucide-react"
+import { api, HomePageData, Product } from "@/lib/data"
 
 export default function Home() {
-  const products = [
-    {
-      id: 1,
-      name: "Wireless Headphones",
-      price: "$99.99",
-      rating: 4.5,
-      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
-      description: "High-quality wireless headphones with noise cancellation"
-    },
-    {
-      id: 2,
-      name: "Smart Watch",
-      price: "$199.99",
-      rating: 4.8,
-      image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop",
-      description: "Feature-rich smartwatch with health tracking"
-    },
-    {
-      id: 3,
-      name: "Laptop Stand",
-      price: "$49.99",
-      rating: 4.2,
-      image: "https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=300&h=300&fit=crop",
-      description: "Ergonomic laptop stand for better posture"
-    },
-    {
-      id: 4,
-      name: "Wireless Mouse",
-      price: "$29.99",
-      rating: 4.6,
-      image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=300&h=300&fit=crop",
-      description: "Precision wireless mouse for productivity"
+  const [homeData, setHomeData] = useState<HomePageData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadHomeData() {
+      try {
+        const data = await api.getHomePageData();
+        setHomeData(data);
+      } catch (error) {
+        console.error('Failed to load home data:', error);
+      } finally {
+        setLoading(false);
+      }
     }
-  ]
+
+    loadHomeData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!homeData) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Failed to load data</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,20 +91,44 @@ export default function Home() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Discover Amazing Tech Products
+              {homeData.heroBanner.title}
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-blue-100">
-              Find the latest gadgets and electronics at unbeatable prices
+              {homeData.heroBanner.subtitle}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/products">
+              <a href={homeData.heroBanner.ctaLink}>
                 <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-                  Shop Now
+                  {homeData.heroBanner.ctaText}
                 </Button>
               </a>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
                 Learn More
               </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-12 bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+              <div className="text-3xl font-bold text-primary mb-2">{homeData.stats.totalProducts.toLocaleString()}</div>
+              <div className="text-sm text-muted-foreground">Products</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-primary mb-2">{homeData.stats.totalCategories}</div>
+              <div className="text-sm text-muted-foreground">Categories</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-primary mb-2">{homeData.stats.totalCustomers.toLocaleString()}</div>
+              <div className="text-sm text-muted-foreground">Happy Customers</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-primary mb-2">{homeData.stats.totalOrders.toLocaleString()}</div>
+              <div className="text-sm text-muted-foreground">Orders Completed</div>
             </div>
           </div>
         </div>
@@ -113,7 +145,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
+            {homeData.featuredProducts.map((product) => (
               <Card key={product.id} className="group hover:shadow-lg transition-shadow">
                 <CardHeader className="p-0">
                   <div className="relative overflow-hidden rounded-t-lg">
@@ -122,6 +154,11 @@ export default function Home() {
                       alt={product.name}
                       className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                     />
+                    {product.discount && (
+                      <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-sm font-medium">
+                        -{product.discount}%
+                      </div>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -134,7 +171,7 @@ export default function Home() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-lg">{product.name}</h3>
-                    <span className="text-lg font-bold text-primary">{product.price}</span>
+                    <span className="text-lg font-bold text-primary">${product.price.toFixed(2)}</span>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">{product.description}</p>
                   <div className="flex items-center justify-between">
@@ -144,6 +181,39 @@ export default function Home() {
                     </div>
                     <Button size="sm">Add to Cart</Button>
                   </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Categories Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Shop by Category</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Browse our wide range of product categories
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {homeData.categories.map((category) => (
+              <Card key={category.id} className="group hover:shadow-lg transition-shadow cursor-pointer">
+                <CardHeader className="p-0">
+                  <div className="relative overflow-hidden rounded-t-lg">
+                    <img
+                      src={category.image}
+                      alt={category.name}
+                      className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 text-center">
+                  <h3 className="font-semibold text-lg mb-1">{category.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-2">{category.description}</p>
+                  <span className="text-xs text-muted-foreground">{category.productCount} products</span>
                 </CardContent>
               </Card>
             ))}

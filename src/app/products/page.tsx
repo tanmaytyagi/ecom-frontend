@@ -1,37 +1,53 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { ProductCard } from "@/components/ui/product-card";
 import { SearchFilters } from "@/components/ui/search-filters";
 import { Pagination } from "@/components/ui/pagination";
-import { products, Product } from "@/lib/data";
+import { api, Product } from "@/lib/data";
 
 const ITEMS_PER_PAGE = 8;
 
 export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedRating, setSelectedRating] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
 
-  // Filter products based on search, category, and rating
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesSearch = product.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const matchesCategory = !selectedCategory || product.category === selectedCategory;
-      const matchesRating = selectedRating === 0 || product.rating >= selectedRating;
+  // Load products with filters
+  useEffect(() => {
+    async function loadProducts() {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const filters = {
+          search: searchQuery || undefined,
+          category: selectedCategory || undefined,
+          rating: selectedRating || undefined,
+          page: currentPage,
+          limit: ITEMS_PER_PAGE
+        };
 
-      return matchesSearch && matchesCategory && matchesRating;
-    });
-  }, [searchQuery, selectedCategory, selectedRating]);
+        const result = await api.getProducts(filters);
+        setProducts(result.products);
+        setTotalPages(result.totalPages);
+        setTotalProducts(result.total);
+      } catch (err) {
+        setError('Failed to load products');
+        console.error('Error loading products:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+    loadProducts();
+  }, [searchQuery, selectedCategory, selectedRating, currentPage]);
 
   // Reset to first page when filters change
   const handleSearchChange = (query: string) => {
@@ -55,6 +71,42 @@ export default function ProductsPage() {
     setSelectedRating(0);
     setCurrentPage(1);
   };
+
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + products.length;
+
+  if (loading && products.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && products.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading products</h3>
+          <p className="text-gray-500 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -83,22 +135,24 @@ export default function ProductsPage() {
         {/* Results Summary */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-gray-600">
-            Showing {startIndex + 1}-{Math.min(endIndex, filteredProducts.length)} of{" "}
-            {filteredProducts.length} products
+            Showing {startIndex + 1}-{endIndex} of {totalProducts} products
           </p>
-          {filteredProducts.length === 0 && (
-            <p className="text-gray-500">No products found matching your criteria.</p>
+          {loading && (
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span className="text-sm text-gray-500">Updating...</span>
+            </div>
           )}
         </div>
 
         {/* Products Grid */}
-        {currentProducts.length > 0 ? (
+        {products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-            {currentProducts.map((product) => (
+            {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
-        ) : (
+        ) : !loading ? (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <svg
@@ -122,7 +176,7 @@ export default function ProductsPage() {
               Try adjusting your search or filter criteria.
             </p>
           </div>
-        )}
+        ) : null}
 
         {/* Pagination */}
         {totalPages > 1 && (
