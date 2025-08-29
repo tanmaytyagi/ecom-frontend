@@ -5,6 +5,7 @@ import { ProductCard } from "@/components/ui/product-card";
 import { SearchFilters } from "@/components/ui/search-filters";
 import { Pagination } from "@/components/ui/pagination";
 import { api, Product } from "@/lib/data";
+import { useCart } from "@/contexts/cart-context";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -18,6 +19,7 @@ export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
+  const { cartCount } = useCart();
 
   // Load products with filters
   useEffect(() => {
@@ -77,7 +79,7 @@ export default function ProductsPage() {
 
   if (loading && products.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-gray-50 flex items-center justify-center py-32">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading products...</p>
@@ -88,7 +90,7 @@ export default function ProductsPage() {
 
   if (error && products.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-gray-50 flex items-center justify-center py-32">
         <div className="text-center">
           <div className="text-red-500 mb-4">
             <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,7 +111,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">

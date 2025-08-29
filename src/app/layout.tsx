@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { CartProvider } from "@/contexts/cart-context";
+import { Navigation } from "@/components/ui/navigation";
+import { Footer } from "@/components/ui/footer";
 
 export const metadata: Metadata = {
-  title: "Minimal Next.js",
-  description: "A minimal Next.js application",
+  title: "TechStore - Your One-Stop Tech Destination",
+  description: "Discover amazing tech products at unbeatable prices. Quality gadgets, electronics, and more.",
 };
 
 export default function RootLayout({
@@ -14,7 +17,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <CartProvider>
+          <div className="min-h-screen flex flex-col">
+            <Navigation />
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </CartProvider>
       </body>
     </html>
   );

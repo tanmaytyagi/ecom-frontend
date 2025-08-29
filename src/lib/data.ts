@@ -41,6 +41,26 @@ export interface FeaturedProduct extends Product {
   featuredOrder: number;
 }
 
+export interface CartItem {
+  id: string;
+  productId: string;
+  product: Product;
+  quantity: number;
+  addedAt: string;
+}
+
+export interface Cart {
+  id: string;
+  userId?: string;
+  items: CartItem[];
+  totalItems: number;
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  total: number;
+  updatedAt: string;
+}
+
 export interface HomePageData {
   featuredProducts: FeaturedProduct[];
   categories: Category[];
@@ -58,6 +78,18 @@ export interface HomePageData {
     totalOrders: number;
   };
 }
+
+// Mock cart data (in real app, this would be in database)
+let mockCart: Cart = {
+  id: "cart-1",
+  items: [],
+  totalItems: 0,
+  subtotal: 0,
+  tax: 0,
+  shipping: 0,
+  total: 0,
+  updatedAt: new Date().toISOString()
+};
 
 // Mock API functions that simulate backend calls
 export const api = {
@@ -179,6 +211,103 @@ export const api = {
     const category = categories.find(cat => cat.slug === categorySlug);
     if (!category) return [];
     return products.filter(product => product.category === category.name);
+  },
+
+  // Cart API functions
+  async getCart(): Promise<Cart> {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return mockCart;
+  },
+
+  async addToCart(productId: string, quantity: number = 1): Promise<Cart> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const product = products.find(p => p.id === productId);
+    if (!product) {
+      throw new Error('Product not found');
+    }
+
+    const existingItem = mockCart.items.find(item => item.productId === productId);
+    
+    if (existingItem) {
+      existingItem.quantity += quantity;
+    } else {
+      const newItem: CartItem = {
+        id: `cart-item-${Date.now()}`,
+        productId,
+        product,
+        quantity,
+        addedAt: new Date().toISOString()
+      };
+      mockCart.items.push(newItem);
+    }
+
+    // Recalculate cart totals
+    this.updateCartTotals();
+    
+    return mockCart;
+  },
+
+  async updateCartItemQuantity(itemId: string, quantity: number): Promise<Cart> {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    const item = mockCart.items.find(item => item.id === itemId);
+    if (!item) {
+      throw new Error('Cart item not found');
+    }
+
+    if (quantity <= 0) {
+      // Remove item if quantity is 0 or negative
+      mockCart.items = mockCart.items.filter(item => item.id !== itemId);
+    } else {
+      item.quantity = quantity;
+    }
+
+    // Recalculate cart totals
+    this.updateCartTotals();
+    
+    return mockCart;
+  },
+
+  async removeFromCart(itemId: string): Promise<Cart> {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    mockCart.items = mockCart.items.filter(item => item.id !== itemId);
+    
+    // Recalculate cart totals
+    this.updateCartTotals();
+    
+    return mockCart;
+  },
+
+  async clearCart(): Promise<Cart> {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    mockCart.items = [];
+    this.updateCartTotals();
+    
+    return mockCart;
+  },
+
+  // Helper function to update cart totals
+  updateCartTotals() {
+    const subtotal = mockCart.items.reduce((sum, item) => {
+      const price = item.product.discount 
+        ? item.product.price * (1 - item.product.discount / 100)
+        : item.product.price;
+      return sum + (price * item.quantity);
+    }, 0);
+
+    const tax = subtotal * 0.08; // 8% tax
+    const shipping = subtotal > 50 ? 0 : 5.99; // Free shipping over $50
+    const total = subtotal + tax + shipping;
+
+    mockCart.subtotal = Math.round(subtotal * 100) / 100;
+    mockCart.tax = Math.round(tax * 100) / 100;
+    mockCart.shipping = Math.round(shipping * 100) / 100;
+    mockCart.total = Math.round(total * 100) / 100;
+    mockCart.totalItems = mockCart.items.reduce((sum, item) => sum + item.quantity, 0);
+    mockCart.updatedAt = new Date().toISOString();
   }
 };
 
