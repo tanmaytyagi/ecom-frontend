@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
+import { CartItem } from "@/types";
 import Link from "next/link";
 
 export default function CartPage() {
@@ -154,7 +155,7 @@ export default function CartPage() {
 }
 
 interface CartItemCardProps {
-  item: any;
+  item: CartItem;
   onUpdateQuantity: (itemId: string, quantity: number) => void;
   onRemove: (itemId: string) => void;
   isUpdating: boolean;
