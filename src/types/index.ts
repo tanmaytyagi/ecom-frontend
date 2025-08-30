@@ -1,4 +1,18 @@
-// Core product interface - only essential fields
+// ============================================================================
+// API RESPONSE TYPES
+// ============================================================================
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message: string;
+}
+
+// ============================================================================
+// PRODUCT TYPES
+// ============================================================================
+
 export interface Product {
   id: string;
   name: string;
@@ -7,25 +21,36 @@ export interface Product {
   category: string;
   image: string;
   inStock: boolean;
+  stockQuantity: number;
 }
 
-// Cart item interface
+// ============================================================================
+// CART TYPES
+// ============================================================================
+
 export interface CartItem {
   id: string;
   productId: string;
   product: Product;
   quantity: number;
+  addedAt: string;
 }
 
-// Cart interface
 export interface Cart {
+  id: string;
   items: CartItem[];
   totalItems: number;
   subtotal: number;
+  tax: number;
   total: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Category interface
+// ============================================================================
+// CATEGORY TYPES
+// ============================================================================
+
 export interface Category {
   id: string;
   name: string;
@@ -33,7 +58,10 @@ export interface Category {
   productCount: number;
 }
 
-// Homepage data interface
+// ============================================================================
+// HOMEPAGE TYPES
+// ============================================================================
+
 export interface HomePageData {
   featuredProducts: Product[];
   categories: Category[];

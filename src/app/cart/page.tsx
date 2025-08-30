@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, AlertCircle } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
 import { CartItem } from "@/types";
 import Link from "next/link";
 
 export default function CartPage() {
-  const { cart, loading, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { cart, loading, error, updateQuantity, removeFromCart, clearCart } = useCart();
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [clearingCart, setClearingCart] = useState(false);
 
@@ -57,7 +57,34 @@ export default function CartPage() {
       <div className="flex items-center justify-center py-32">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading cart...</p>
+          <p className="text-gray-600">
+            {clearingCart ? 'Clearing cart...' : 'Loading cart...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error message if there's an error
+  if (error) {
+    return (
+      <div className="bg-gray-50 py-8">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="text-red-500 mb-6">
+              <AlertCircle className="mx-auto h-24 w-24" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Something went wrong</h1>
+            <p className="text-gray-600 mb-8">
+              {error}
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -138,7 +165,7 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Tax (8%)</span>
-                  <span className="font-medium">${(cart.subtotal * 0.08).toFixed(2)}</span>
+                  <span className="font-medium">${cart.tax.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
@@ -189,13 +216,18 @@ function CartItemCard({ item, onUpdateQuantity, onRemove, isUpdating }: CartItem
             <div className="mt-1">
               <span className="font-medium text-gray-900">${item.product.price.toFixed(2)}</span>
             </div>
+            {item.product.stockQuantity < 10 && (
+              <p className="text-sm text-orange-600 mt-1">
+                Only {item.product.stockQuantity} left in stock
+              </p>
+            )}
           </div>
 
           {/* Remove Button */}
           <button
             onClick={() => onRemove(item.id)}
             disabled={isUpdating}
-            className="text-red-600 hover:text-red-700 ml-2"
+            className="text-red-600 hover:text-red-700 ml-2 disabled:opacity-50"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -209,15 +241,17 @@ function CartItemCard({ item, onUpdateQuantity, onRemove, isUpdating }: CartItem
               disabled={isUpdating || item.quantity <= 1}
               className="p-1 rounded border hover:bg-gray-50 disabled:opacity-50"
             >
-              <Minus className="h-3 w-3" />
+              <Minus className="h-4 w-4" />
             </button>
-            <span className="w-12 text-center font-medium">{item.quantity}</span>
+            
+            <span className="w-8 text-center font-medium">{item.quantity}</span>
+            
             <button
               onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-              disabled={isUpdating}
+              disabled={isUpdating || item.quantity >= item.product.stockQuantity}
               className="p-1 rounded border hover:bg-gray-50 disabled:opacity-50"
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-4 w-4" />
             </button>
           </div>
 
