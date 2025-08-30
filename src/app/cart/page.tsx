@@ -9,6 +9,7 @@ import Link from "next/link";
 export default function CartPage() {
   const { cart, loading, updateQuantity, removeFromCart, clearCart } = useCart();
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const [clearingCart, setClearingCart] = useState(false);
 
   const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
     setUpdatingItems(prev => new Set(prev).add(itemId));
@@ -41,14 +42,17 @@ export default function CartPage() {
   };
 
   const handleClearCart = async () => {
+    setClearingCart(true);
     try {
       await clearCart();
     } catch (err) {
       console.error('Error clearing cart:', err);
+    } finally {
+      setClearingCart(false);
     }
   };
 
-  if (loading) {
+  if (loading || clearingCart) {
     return (
       <div className="flex items-center justify-center py-32">
         <div className="text-center">
@@ -101,9 +105,10 @@ export default function CartPage() {
                 <h2 className="text-xl font-semibold text-gray-900">Cart Items</h2>
                 <button 
                   onClick={handleClearCart}
-                  className="text-red-600 hover:text-red-700 text-sm font-medium"
+                  disabled={clearingCart}
+                  className="text-red-600 hover:text-red-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Clear Cart
+                  {clearingCart ? 'Clearing...' : 'Clear Cart'}
                 </button>
               </div>
               
