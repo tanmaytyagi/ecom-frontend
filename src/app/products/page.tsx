@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ProductCard } from "@/components/ui/product-card";
 import { api } from "@/lib/api";
-import { Product } from "@/types";
+import { Product } from "@/lib/api";
 import { AlertCircle } from "lucide-react";
 
 export default function ProductsPage() {
@@ -15,6 +15,7 @@ export default function ProductsPage() {
     async function loadProducts() {
       try {
         setError(null);
+        // Call backend API - backend returns all products
         const response = await api.getProducts();
         
         if (response.success && response.data) {

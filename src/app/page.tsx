@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ProductCard } from "@/components/ui/product-card";
 import { CategoryCard } from "@/components/ui/category-card";
 import { api } from "@/lib/api";
-import { HomePageData } from "@/types";
+import { HomePageData } from "@/lib/api";
 import { AlertCircle } from "lucide-react";
 import Link from "next/link";
 
@@ -17,6 +17,7 @@ export default function HomePage() {
     async function loadHomePageData() {
       try {
         setError(null);
+        // Call backend API - backend returns all homepage data
         const response = await api.getHomePageData();
         
         if (response.success && response.data) {

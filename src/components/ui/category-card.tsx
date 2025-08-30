@@ -1,6 +1,6 @@
 "use client";
 
-import { Category } from "@/types";
+import { Category } from "@/lib/api";
 import Link from "next/link";
 
 interface CategoryCardProps {

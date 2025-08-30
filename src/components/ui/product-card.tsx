@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Product } from "@/types";
+import { Product } from "@/lib/api";
 import { useCart } from "@/contexts/cart-context";
 import { AlertCircle } from "lucide-react";
 
@@ -21,6 +21,7 @@ export function ProductCard({ product }: ProductCardProps) {
     setError(null);
     
     try {
+      // Call backend API - backend handles all validation and logic
       await addToCart(product.id, 1);
     } catch (error) {
       console.error('Failed to add to cart:', error);

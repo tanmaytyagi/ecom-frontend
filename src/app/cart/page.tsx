@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Minus, Plus, Trash2, ShoppingBag, AlertCircle } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
-import { CartItem } from "@/types";
+import { CartItem } from "@/lib/api";
 import Link from "next/link";
 
 export default function CartPage() {
@@ -14,6 +14,7 @@ export default function CartPage() {
   const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
     setUpdatingItems(prev => new Set(prev).add(itemId));
     try {
+      // Call backend API - backend handles all validation and logic
       await updateQuantity(itemId, newQuantity);
     } catch (err) {
       console.error('Error updating quantity:', err);
@@ -29,6 +30,7 @@ export default function CartPage() {
   const handleRemoveItem = async (itemId: string) => {
     setUpdatingItems(prev => new Set(prev).add(itemId));
     try {
+      // Call backend API - backend handles all validation and logic
       await removeFromCart(itemId);
     } catch (err) {
       console.error('Error removing item:', err);
@@ -44,6 +46,7 @@ export default function CartPage() {
   const handleClearCart = async () => {
     setClearingCart(true);
     try {
+      // Call backend API - backend handles all validation and logic
       await clearCart();
     } catch (err) {
       console.error('Error clearing cart:', err);
@@ -90,6 +93,7 @@ export default function CartPage() {
     );
   }
 
+  // Show empty cart if no cart or no items
   if (!cart || cart.items.length === 0) {
     return (
       <div className="bg-gray-50 py-8">

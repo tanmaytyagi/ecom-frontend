@@ -1,11 +1,115 @@
-import { Product, Category, Cart, CartItem, HomePageData, ApiResponse } from '@/types';
+// ============================================================================
+// API CONTRACTS - Request/Response interfaces for backend communication
+// ============================================================================
+
+// Generic API Response
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message: string;
+}
+
+// ============================================================================
+// PRODUCT API CONTRACTS
+// ============================================================================
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image: string;
+  inStock: boolean;
+  stockQuantity: number;
+}
+
+// Request: GET /api/products
+// Response: ApiResponse<Product[]>
+
+// Request: GET /api/products/featured
+// Response: ApiResponse<Product[]>
+
+// ============================================================================
+// CART API CONTRACTS
+// ============================================================================
+
+export interface CartItem {
+  id: string;
+  productId: string;
+  product: Product;
+  quantity: number;
+  addedAt: string;
+}
+
+export interface Cart {
+  id: string;
+  items: CartItem[];
+  totalItems: number;
+  subtotal: number;
+  tax: number;
+  total: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Request: GET /api/cart
+// Response: ApiResponse<Cart>
+
+// Request: POST /api/cart/add
+// Body: { productId: string; quantity?: number }
+// Response: ApiResponse<Cart>
+
+// Request: PUT /api/cart/update
+// Body: { itemId: string; quantity: number }
+// Response: ApiResponse<Cart>
+
+// Request: DELETE /api/cart/remove
+// Body: { itemId: string }
+// Response: ApiResponse<Cart>
+
+// Request: DELETE /api/cart/clear
+// Response: ApiResponse<Cart>
+
+// ============================================================================
+// CATEGORY API CONTRACTS
+// ============================================================================
+
+export interface Category {
+  id: string;
+  name: string;
+  image: string;
+  productCount: number;
+}
+
+// Request: GET /api/categories
+// Response: ApiResponse<Category[]>
+
+// ============================================================================
+// HOMEPAGE API CONTRACTS
+// ============================================================================
+
+export interface HomePageData {
+  featuredProducts: Product[];
+  categories: Category[];
+  heroBanner: {
+    title: string;
+    subtitle: string;
+    ctaText: string;
+    ctaLink: string;
+  };
+}
+
+// Request: GET /api/homepage
+// Response: ApiResponse<HomePageData>
 
 // ============================================================================
 // MOCK DATA STORAGE (Simulates Database)
 // ============================================================================
 
 // Mock products database
-const products: Product[] = [
+const mockProducts: Product[] = [
   {
     id: "1",
     name: "Wireless Headphones",
@@ -89,7 +193,7 @@ const products: Product[] = [
 ];
 
 // Mock categories database
-const categories: Category[] = [
+const mockCategories: Category[] = [
   {
     id: "1",
     name: "Electronics",
@@ -129,148 +233,84 @@ let mockCart: Cart = {
 };
 
 // ============================================================================
-// BUSINESS LOGIC (Server-side validation and calculations)
+// BACKEND API SIMULATION (Replace with real HTTP calls)
 // ============================================================================
 
-class CartService {
-  private static TAX_RATE = 0.08; // 8% tax
-  private static MAX_QUANTITY_PER_ITEM = 10;
-  private static MAX_ITEMS_IN_CART = 20;
+// Helper function to simulate API delay
+const simulateApiDelay = (ms: number = 200) => new Promise(resolve => setTimeout(resolve, ms));
 
-  // Validate product exists and is in stock
-  static validateProduct(productId: string, quantity: number): { valid: boolean; error?: string; product?: Product } {
-    const product = products.find(p => p.id === productId);
-    
-    if (!product) {
-      return { valid: false, error: 'Product not found' };
-    }
-    
-    if (!product.inStock) {
-      return { valid: false, error: 'Product is out of stock' };
-    }
-    
-    if (quantity > product.stockQuantity) {
-      return { valid: false, error: `Only ${product.stockQuantity} items available in stock` };
-    }
-    
-    if (quantity > this.MAX_QUANTITY_PER_ITEM) {
-      return { valid: false, error: `Maximum ${this.MAX_QUANTITY_PER_ITEM} items per product allowed` };
-    }
-    
-    return { valid: true, product };
-  }
+// Helper function to calculate cart totals (Backend logic)
+const calculateCartTotals = (items: CartItem[]) => {
+  const subtotal = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const tax = subtotal * 0.08; // 8% tax
+  const total = subtotal + tax;
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Validate cart limits
-  static validateCartLimits(currentItems: CartItem[], newQuantity: number): { valid: boolean; error?: string } {
-    const totalItems = currentItems.reduce((sum, item) => sum + item.quantity, 0) + newQuantity;
-    
-    if (totalItems > this.MAX_ITEMS_IN_CART) {
-      return { valid: false, error: `Maximum ${this.MAX_ITEMS_IN_CART} items allowed in cart` };
-    }
-    
-    return { valid: true };
-  }
+  return {
+    subtotal: Math.round(subtotal * 100) / 100,
+    tax: Math.round(tax * 100) / 100,
+    total: Math.round(total * 100) / 100,
+    totalItems
+  };
+};
 
-  // Calculate cart totals with business rules
-  static calculateCartTotals(items: CartItem[]): { subtotal: number; tax: number; total: number; totalItems: number } {
-    const subtotal = items.reduce((sum, item) => {
-      return sum + (item.product.price * item.quantity);
-    }, 0);
-
-    const tax = subtotal * this.TAX_RATE;
-    const total = subtotal + tax;
-    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-
-    return {
-      subtotal: Math.round(subtotal * 100) / 100,
-      tax: Math.round(tax * 100) / 100,
-      total: Math.round(total * 100) / 100,
-      totalItems
-    };
-  }
-
-  // Update cart with new totals and timestamps
-  static updateCart(cart: Cart, items: CartItem[]): Cart {
-    const totals = this.calculateCartTotals(items);
-    
-    return {
-      ...cart,
-      items,
-      ...totals,
-      updatedAt: new Date().toISOString()
-    };
-  }
-}
-
-// ============================================================================
-// API ENDPOINTS (Simulates REST API)
-// ============================================================================
+// Helper function to update cart (Backend logic)
+const updateCart = (items: CartItem[]) => {
+  const totals = calculateCartTotals(items);
+  mockCart = {
+    ...mockCart,
+    items,
+    ...totals,
+    updatedAt: new Date().toISOString()
+  };
+  return mockCart;
+};
 
 export const api = {
   // ===== PRODUCT ENDPOINTS =====
   
+  // GET /api/products
   async getProducts(): Promise<ApiResponse<Product[]>> {
-    await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API delay
-    
+    await simulateApiDelay(300);
     return {
       success: true,
-      data: products,
+      data: mockProducts,
       message: 'Products retrieved successfully'
     };
   },
 
+  // GET /api/products/featured
   async getFeaturedProducts(): Promise<ApiResponse<Product[]>> {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
+    await simulateApiDelay(200);
     return {
       success: true,
-      data: products.slice(0, 4),
+      data: mockProducts.slice(0, 4),
       message: 'Featured products retrieved successfully'
-    };
-  },
-
-  async getProduct(productId: string): Promise<ApiResponse<Product>> {
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
-    const product = products.find(p => p.id === productId);
-    
-    if (!product) {
-      return {
-        success: false,
-        error: 'Product not found',
-        message: 'The requested product could not be found'
-      };
-    }
-    
-    return {
-      success: true,
-      data: product,
-      message: 'Product retrieved successfully'
     };
   },
 
   // ===== CATEGORY ENDPOINTS =====
   
+  // GET /api/categories
   async getCategories(): Promise<ApiResponse<Category[]>> {
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
+    await simulateApiDelay(150);
     return {
       success: true,
-      data: categories,
+      data: mockCategories,
       message: 'Categories retrieved successfully'
     };
   },
 
   // ===== HOMEPAGE ENDPOINTS =====
   
+  // GET /api/homepage
   async getHomePageData(): Promise<ApiResponse<HomePageData>> {
-    await new Promise(resolve => setTimeout(resolve, 400));
-    
+    await simulateApiDelay(400);
     return {
       success: true,
       data: {
-        featuredProducts: products.slice(0, 4),
-        categories: categories,
+        featuredProducts: mockProducts.slice(0, 4),
+        categories: mockCategories,
         heroBanner: {
           title: "Discover Amazing Tech Products",
           subtitle: "Find the latest gadgets and electronics at unbeatable prices",
@@ -284,9 +324,9 @@ export const api = {
 
   // ===== CART ENDPOINTS =====
   
+  // GET /api/cart
   async getCart(): Promise<ApiResponse<Cart>> {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
+    await simulateApiDelay(200);
     return {
       success: true,
       data: mockCart,
@@ -294,136 +334,154 @@ export const api = {
     };
   },
 
+  // POST /api/cart/add
+  // Body: { productId: string; quantity?: number }
   async addToCart(productId: string, quantity: number = 1): Promise<ApiResponse<Cart>> {
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await simulateApiDelay(300);
     
-    // Validate product and quantity
-    const productValidation = CartService.validateProduct(productId, quantity);
-    if (!productValidation.valid) {
+    // Backend validation logic
+    const product = mockProducts.find(p => p.id === productId);
+    if (!product) {
       return {
         success: false,
-        error: productValidation.error || 'Product validation failed',
-        message: productValidation.error || 'Product validation failed'
+        error: 'Product not found',
+        message: 'Product not found'
       };
     }
     
-    // Validate cart limits
-    const cartValidation = CartService.validateCartLimits(mockCart.items, quantity);
-    if (!cartValidation.valid) {
+    if (!product.inStock || product.stockQuantity === 0) {
       return {
         success: false,
-        error: cartValidation.error || 'Cart validation failed',
-        message: cartValidation.error || 'Cart validation failed'
+        error: 'Product is out of stock',
+        message: 'Product is out of stock'
       };
     }
     
-    // Add to cart logic
+    if (quantity > product.stockQuantity) {
+      return {
+        success: false,
+        error: `Only ${product.stockQuantity} items available in stock`,
+        message: `Only ${product.stockQuantity} items available in stock`
+      };
+    }
+    
+    // Backend cart logic
     const existingItem = mockCart.items.find(item => item.productId === productId);
     
     if (existingItem) {
-      // Check if new total quantity exceeds stock
       const newTotalQuantity = existingItem.quantity + quantity;
-      const stockValidation = CartService.validateProduct(productId, newTotalQuantity);
-      if (!stockValidation.valid) {
+      if (newTotalQuantity > product.stockQuantity) {
         return {
           success: false,
-          error: stockValidation.error || 'Stock validation failed',
-          message: stockValidation.error || 'Stock validation failed'
+          error: `Cannot add ${quantity} more items. Only ${product.stockQuantity - existingItem.quantity} available`,
+          message: `Cannot add ${quantity} more items. Only ${product.stockQuantity - existingItem.quantity} available`
         };
       }
-      
       existingItem.quantity = newTotalQuantity;
     } else {
       const newItem: CartItem = {
         id: `cart-item-${Date.now()}`,
         productId,
-        product: productValidation.product!,
+        product,
         quantity,
         addedAt: new Date().toISOString()
       };
       mockCart.items.push(newItem);
     }
 
-    // Update cart with new totals
-    mockCart = CartService.updateCart(mockCart, mockCart.items);
+    // Backend updates cart totals
+    const updatedCart = updateCart(mockCart.items);
     
     return {
       success: true,
-      data: mockCart,
+      data: updatedCart,
       message: 'Item added to cart successfully'
     };
   },
 
+  // PUT /api/cart/update
+  // Body: { itemId: string; quantity: number }
   async updateCartItemQuantity(itemId: string, quantity: number): Promise<ApiResponse<Cart>> {
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await simulateApiDelay(200);
     
+    // Backend validation logic
     const item = mockCart.items.find(item => item.id === itemId);
     if (!item) {
       return {
         success: false,
         error: 'Cart item not found',
-        message: 'The requested cart item could not be found'
+        message: 'Cart item not found'
       };
     }
 
     if (quantity <= 0) {
       // Remove item if quantity is 0 or negative
-      mockCart.items = mockCart.items.filter(item => item.id !== itemId);
-    } else {
-      // Validate new quantity
-      const productValidation = CartService.validateProduct(item.productId, quantity);
-      if (!productValidation.valid) {
-        return {
-          success: false,
-          error: productValidation.error || 'Product validation failed',
-          message: productValidation.error || 'Product validation failed'
-        };
-      }
+      const updatedItems = mockCart.items.filter(item => item.id !== itemId);
+      const updatedCart = updateCart(updatedItems);
       
-      item.quantity = quantity;
+      return {
+        success: true,
+        data: updatedCart,
+        message: 'Item removed from cart'
+      };
     }
-
-    // Update cart with new totals
-    mockCart = CartService.updateCart(mockCart, mockCart.items);
+    
+    // Backend validation for new quantity
+    if (quantity > item.product.stockQuantity) {
+      return {
+        success: false,
+        error: `Only ${item.product.stockQuantity} items available in stock`,
+        message: `Only ${item.product.stockQuantity} items available in stock`
+      };
+    }
+    
+    // Backend updates item quantity
+    item.quantity = quantity;
+    const updatedCart = updateCart(mockCart.items);
     
     return {
       success: true,
-      data: mockCart,
-      message: quantity <= 0 ? 'Item removed from cart' : 'Cart item quantity updated successfully'
+      data: updatedCart,
+      message: 'Cart item quantity updated successfully'
     };
   },
 
+  // DELETE /api/cart/remove
+  // Body: { itemId: string }
   async removeFromCart(itemId: string): Promise<ApiResponse<Cart>> {
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await simulateApiDelay(200);
     
+    // Backend validation logic
     const itemExists = mockCart.items.some(item => item.id === itemId);
     if (!itemExists) {
       return {
         success: false,
         error: 'Cart item not found',
-        message: 'The requested cart item could not be found'
+        message: 'Cart item not found'
       };
     }
     
-    mockCart.items = mockCart.items.filter(item => item.id !== itemId);
-    mockCart = CartService.updateCart(mockCart, mockCart.items);
+    // Backend removes item
+    const updatedItems = mockCart.items.filter(item => item.id !== itemId);
+    const updatedCart = updateCart(updatedItems);
     
     return {
       success: true,
-      data: mockCart,
+      data: updatedCart,
       message: 'Item removed from cart successfully'
     };
   },
 
+  // DELETE /api/cart/clear
   async clearCart(): Promise<ApiResponse<Cart>> {
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await simulateApiDelay(200);
     
-    mockCart.items = [];
-    mockCart = CartService.updateCart(mockCart, mockCart.items);
+    // Backend clears cart
+    const updatedCart = updateCart([]);
     
     return {
       success: true,
-      data: mockCart,
+      data: updatedCart,
       message: 'Cart cleared successfully'
     };
   }
