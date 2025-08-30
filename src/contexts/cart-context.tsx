@@ -9,9 +9,8 @@ interface CartContextType {
   cartCount: number;
   loading: boolean;
   error: string | null;
-  addToCart: (productId: string, quantity?: number) => Promise<void>;
-  updateQuantity: (itemId: string, quantity: number) => Promise<void>;
-  removeFromCart: (itemId: string) => Promise<void>;
+  addToCart: (productId: string) => Promise<void>;
+  removeFromCart: (productId: string) => Promise<void>;
   clearCart: () => Promise<void>;
   refreshCart: () => Promise<void>;
 }
@@ -46,13 +45,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addToCart = async (productId: string, quantity: number = 1) => {
+  const addToCart = async (productId: string) => {
     try {
       setError(null);
-      const response = await api.addToCart(productId, quantity);
+      // Call backend API - backend handles all logic
+      const response = await api.addToCartByProductId(productId);
       
-      if (response.success && response.data) {
-        setCart(response.data); // Backend returns updated cart
+      if (response.success) {
+        // Refresh cart to get updated state from backend
+        await refreshCart();
       } else {
         setError(response.error || 'Failed to add item to cart');
         throw new Error(response.error || 'Failed to add item to cart');
@@ -64,38 +65,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateQuantity = async (itemId: string, quantity: number) => {
+  const removeFromCart = async (productId: string) => {
     try {
       setError(null);
-      const response = await api.updateCartItemQuantity(itemId, quantity);
+      // Call backend API - backend handles all logic
+      const response = await api.removeFromCartByProductId(productId);
       
-      if (response.success && response.data) {
-        setCart(response.data); // Backend returns updated cart
+      if (response.success) {
+        // Refresh cart to get updated state from backend
+        await refreshCart();
       } else {
-        setError(response.error || 'Failed to update quantity');
-        throw new Error(response.error || 'Failed to update quantity');
-      }
-    } catch (err) {
-      console.error('Error updating quantity:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update quantity');
-      throw err;
-    }
-  };
-
-  const removeFromCart = async (itemId: string) => {
-    try {
-      setError(null);
-      const response = await api.removeFromCart(itemId);
-      
-      if (response.success && response.data) {
-        setCart(response.data); // Backend returns updated cart
-      } else {
-        setError(response.error || 'Failed to remove item');
-        throw new Error(response.error || 'Failed to remove item');
+        setError(response.error || 'Failed to remove item from cart');
+        throw new Error(response.error || 'Failed to remove item from cart');
       }
     } catch (err) {
       console.error('Error removing from cart:', err);
-      setError(err instanceof Error ? err.message : 'Failed to remove item');
+      setError(err instanceof Error ? err.message : 'Failed to remove item from cart');
       throw err;
     }
   };
@@ -103,10 +88,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = async () => {
     try {
       setError(null);
+      // Call backend API - backend handles all logic
       const response = await api.clearCart();
       
-      if (response.success && response.data) {
-        setCart(response.data); // Backend returns updated cart
+      if (response.success) {
+        // Refresh cart to get updated state from backend
+        await refreshCart();
       } else {
         setError(response.error || 'Failed to clear cart');
         throw new Error(response.error || 'Failed to clear cart');
@@ -118,7 +105,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const cartCount = cart?.totalItems || 0;
+  const cartCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
   const value: CartContextType = {
     cart,
@@ -126,7 +113,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     loading,
     error,
     addToCart,
-    updateQuantity,
     removeFromCart,
     clearCart,
     refreshCart,

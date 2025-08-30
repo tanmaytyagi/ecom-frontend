@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Product } from "@/lib/api";
 import { useCart } from "@/contexts/cart-context";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Plus, Minus } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
@@ -11,18 +11,17 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const [isAdding, setIsAdding] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { addToCart } = useCart();
+  const { cart, addToCart, removeFromCart } = useCart();
 
   const handleAddToCart = async () => {
-    if (!product.inStock) return;
-    
     setIsAdding(true);
     setError(null);
     
     try {
-      // Call backend API - backend handles all validation and logic
-      await addToCart(product.id, 1);
+      // Call backend API - backend handles all logic
+      await addToCart(product.id);
     } catch (error) {
       console.error('Failed to add to cart:', error);
       setError(error instanceof Error ? error.message : 'Failed to add to cart');
@@ -31,28 +30,33 @@ export function ProductCard({ product }: ProductCardProps) {
     }
   };
 
-  const isLowStock = product.stockQuantity < 10 && product.stockQuantity > 0;
-  const isOutOfStock = !product.inStock || product.stockQuantity === 0;
+  const handleRemoveFromCart = async () => {
+    setIsRemoving(true);
+    setError(null);
+    
+    try {
+      // Call backend API - backend handles all logic
+      await removeFromCart(product.id);
+    } catch (error) {
+      console.error('Failed to remove from cart:', error);
+      setError(error instanceof Error ? error.message : 'Failed to remove from cart');
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
+  // Get current quantity from cart (backend state)
+  const currentQuantity = cart?.items.find(item => item.id === product.id)?.quantity || 0;
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200">
       {/* Product Image */}
-      <div className="aspect-square overflow-hidden relative">
+      <div className="aspect-square overflow-hidden">
         <img
           src={product.image}
           alt={product.name}
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
         />
-        {isOutOfStock && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <span className="text-white font-semibold text-lg">Out of Stock</span>
-          </div>
-        )}
-        {isLowStock && !isOutOfStock && (
-          <div className="absolute top-2 right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
-            Low Stock
-          </div>
-        )}
       </div>
       
       {/* Product Info */}
@@ -63,13 +67,6 @@ export function ProductCard({ product }: ProductCardProps) {
         <p className="text-sm text-gray-600 mb-3 line-clamp-2">
           {product.description}
         </p>
-        
-        {/* Stock Information */}
-        {isLowStock && !isOutOfStock && (
-          <p className="text-sm text-orange-600 mb-2">
-            Only {product.stockQuantity} left in stock
-          </p>
-        )}
         
         {/* Error Message */}
         {error && (
@@ -84,19 +81,33 @@ export function ProductCard({ product }: ProductCardProps) {
             ${product.price.toFixed(2)}
           </span>
           
-          <button
-            onClick={handleAddToCart}
-            disabled={isOutOfStock || isAdding}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-              isAdding
-                ? 'bg-green-100 text-green-800'
-                : isOutOfStock
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {isAdding ? 'Added!' : isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-          </button>
+          {/* Cart Controls */}
+          <div className="flex items-center gap-2">
+            {currentQuantity > 0 && (
+              <>
+                <button
+                  onClick={handleRemoveFromCart}
+                  disabled={isRemoving || isAdding}
+                  className="p-1 rounded border hover:bg-gray-50 disabled:opacity-50"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-8 text-center font-medium">{currentQuantity}</span>
+              </>
+            )}
+            
+            <button
+              onClick={handleAddToCart}
+              disabled={isAdding || isRemoving}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                isAdding
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {isAdding ? 'Adding...' : currentQuantity > 0 ? '+' : 'Add to Cart'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

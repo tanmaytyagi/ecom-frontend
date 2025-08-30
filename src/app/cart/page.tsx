@@ -1,52 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Minus, Plus, Trash2, ShoppingBag, AlertCircle } from "lucide-react";
+import { ShoppingBag, AlertCircle } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
 import { CartItem } from "@/lib/api";
 import Link from "next/link";
 
 export default function CartPage() {
-  const { cart, loading, error, updateQuantity, removeFromCart, clearCart } = useCart();
-  const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const { cart, loading, error, clearCart } = useCart();
   const [clearingCart, setClearingCart] = useState(false);
-
-  const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
-    setUpdatingItems(prev => new Set(prev).add(itemId));
-    try {
-      // Call backend API - backend handles all validation and logic
-      await updateQuantity(itemId, newQuantity);
-    } catch (err) {
-      console.error('Error updating quantity:', err);
-    } finally {
-      setUpdatingItems(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(itemId);
-        return newSet;
-      });
-    }
-  };
-
-  const handleRemoveItem = async (itemId: string) => {
-    setUpdatingItems(prev => new Set(prev).add(itemId));
-    try {
-      // Call backend API - backend handles all validation and logic
-      await removeFromCart(itemId);
-    } catch (err) {
-      console.error('Error removing item:', err);
-    } finally {
-      setUpdatingItems(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(itemId);
-        return newSet;
-      });
-    }
-  };
 
   const handleClearCart = async () => {
     setClearingCart(true);
     try {
-      // Call backend API - backend handles all validation and logic
+      // Call backend API - backend handles all logic
       await clearCart();
     } catch (err) {
       console.error('Error clearing cart:', err);
@@ -117,6 +84,8 @@ export default function CartPage() {
     );
   }
 
+  const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+
   return (
     <div className="bg-gray-50 py-8">
       <div className="container mx-auto px-4">
@@ -124,7 +93,7 @@ export default function CartPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Shopping Cart</h1>
           <p className="text-gray-600">
-            {cart.totalItems} {cart.totalItems === 1 ? 'item' : 'items'} in your cart
+            {totalItems} {totalItems === 1 ? 'item' : 'items'} in your cart
           </p>
         </div>
 
@@ -145,13 +114,7 @@ export default function CartPage() {
               
               <div className="space-y-4">
                 {cart.items.map((item) => (
-                  <CartItemCard
-                    key={item.id}
-                    item={item}
-                    onUpdateQuantity={handleUpdateQuantity}
-                    onRemove={handleRemoveItem}
-                    isUpdating={updatingItems.has(item.id)}
-                  />
+                  <CartItemCard key={item.id} item={item} />
                 ))}
               </div>
             </div>
@@ -192,21 +155,18 @@ export default function CartPage() {
 
 interface CartItemCardProps {
   item: CartItem;
-  onUpdateQuantity: (itemId: string, quantity: number) => void;
-  onRemove: (itemId: string) => void;
-  isUpdating: boolean;
 }
 
-function CartItemCard({ item, onUpdateQuantity, onRemove, isUpdating }: CartItemCardProps) {
-  const totalPrice = item.product.price * item.quantity;
+function CartItemCard({ item }: CartItemCardProps) {
+  const totalPrice = item.price * item.quantity;
 
   return (
     <div className="flex gap-4 p-4 border rounded-lg">
       {/* Product Image */}
       <div className="flex-shrink-0">
         <img
-          src={item.product.image}
-          alt={item.product.name}
+          src={item.image}
+          alt={item.name}
           className="w-20 h-20 object-cover rounded-lg"
         />
       </div>
@@ -215,48 +175,19 @@ function CartItemCard({ item, onUpdateQuantity, onRemove, isUpdating }: CartItem
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start">
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate">{item.product.name}</h3>
-            <p className="text-sm text-gray-600">{item.product.category}</p>
+            <h3 className="font-semibold text-gray-900 truncate">{item.name}</h3>
+            <p className="text-sm text-gray-600">{item.category}</p>
             <div className="mt-1">
-              <span className="font-medium text-gray-900">${item.product.price.toFixed(2)}</span>
+              <span className="font-medium text-gray-900">${item.price.toFixed(2)}</span>
             </div>
-            {item.product.stockQuantity < 10 && (
-              <p className="text-sm text-orange-600 mt-1">
-                Only {item.product.stockQuantity} left in stock
-              </p>
-            )}
           </div>
-
-          {/* Remove Button */}
-          <button
-            onClick={() => onRemove(item.id)}
-            disabled={isUpdating}
-            className="text-red-600 hover:text-red-700 ml-2 disabled:opacity-50"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
         </div>
 
-        {/* Quantity Controls */}
+        {/* Quantity and Total */}
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-              disabled={isUpdating || item.quantity <= 1}
-              className="p-1 rounded border hover:bg-gray-50 disabled:opacity-50"
-            >
-              <Minus className="h-4 w-4" />
-            </button>
-            
-            <span className="w-8 text-center font-medium">{item.quantity}</span>
-            
-            <button
-              onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-              disabled={isUpdating || item.quantity >= item.product.stockQuantity}
-              className="p-1 rounded border hover:bg-gray-50 disabled:opacity-50"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
+            <span className="text-gray-600">Quantity:</span>
+            <span className="font-medium">{item.quantity}</span>
           </div>
 
           <div className="text-right">
