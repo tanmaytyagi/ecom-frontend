@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { CartProvider } from "@/contexts/cart-context";
-import { Navigation } from "@/components/ui/navigation";
-import { Footer } from "@/components/ui/footer";
+import { Navigation } from "@/components/layout/navigation";
+import { Footer } from "@/components/layout/footer";
 
 export const metadata: Metadata = {
   title: "TechStore - Your One-Stop Tech Destination",
-  description: "Discover amazing tech products at unbeatable prices. Quality gadgets, electronics, and more.",
+  description: "Discover amazing tech products at unbeatable prices.",
 };
 
 export default function RootLayout({
