@@ -56,6 +56,7 @@ export interface OrderSummary {
 export interface Cart {
   cartItems: CartItem[];
   orderSummary: OrderSummary;
+  totalItems: number;
 }
 
 // ============================================================================
@@ -162,7 +163,8 @@ let mockCart: Cart = {
     taxPercentage: 18,
     taxAmount: 0,
     total: 0
-  }
+  },
+  totalItems: 0
 };
 
 // ============================================================================
@@ -190,9 +192,11 @@ const calculateCartTotals = (items: CartItem[]) => {
 // Helper function to update cart (Backend logic)
 const updateCart = (items: CartItem[]) => {
   const orderSummary = calculateCartTotals(items);
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   mockCart = {
     cartItems: items,
-    orderSummary
+    orderSummary,
+    totalItems
   };
   return mockCart;
 };
@@ -323,7 +327,8 @@ export const api = {
         taxPercentage: 18,
         taxAmount: 0,
         total: 0
-      }
+      },
+      totalItems: 0
     };
     
     return {

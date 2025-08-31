@@ -163,7 +163,7 @@ export default function CartPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Shopping Cart</h1>
           <p className="text-gray-600">
-            {cart.cartItems.length} {cart.cartItems.length === 1 ? 'item' : 'items'} in your cart
+            {cart.totalItems} {cart.totalItems === 1 ? 'item' : 'items'} in your cart
           </p>
         </div>
 
