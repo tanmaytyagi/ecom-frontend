@@ -87,7 +87,7 @@ export default function HomePage() {
           <p className="text-xl md:text-2xl mb-8 text-blue-100">
             Find the latest gadgets and electronics at unbeatable prices
           </p>
-          <Link href="/products">
+          <Link href="/products/all">
             <button className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors">
               Shop Now
             </button>
@@ -110,7 +110,7 @@ export default function HomePage() {
           </div>
           
           <div className="text-center">
-            <Link href="/products">
+            <Link href="/products/all">
               <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
                 View All Products
               </button>

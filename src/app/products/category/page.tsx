@@ -1,9 +1,7 @@
-"use client";
-
 import { Suspense } from "react";
-import { ProductsClient } from "./products-client";
+import { CategoryProductsClient } from "./category-products-client";
 
-export default function ProductsPage() {
+export default function CategoryProductsPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center py-32">
@@ -13,7 +11,7 @@ export default function ProductsPage() {
         </div>
       </div>
     }>
-      <ProductsClient />
+      <CategoryProductsClient />
     </Suspense>
   );
 }

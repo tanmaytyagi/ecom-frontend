@@ -9,7 +9,7 @@ interface CategoryCardProps {
 
 export function CategoryCard({ category }: CategoryCardProps) {
   return (
-    <Link href={`/products?category=${encodeURIComponent(category.name)}`}>
+    <Link href={`/products/category?category=${encodeURIComponent(category.name)}`}>
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer">
         {/* Category Image */}
         <div className="aspect-video overflow-hidden">

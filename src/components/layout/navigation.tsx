@@ -25,7 +25,7 @@ export function Navigation() {
               Home
             </Link>
             <Link 
-              href="/products" 
+              href="/products/all" 
               className="text-gray-600 hover:text-gray-900 transition-colors"
             >
               Products
