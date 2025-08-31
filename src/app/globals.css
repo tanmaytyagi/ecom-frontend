@@ -54,7 +54,6 @@
     @apply border-border;
   }
   body {
-    /* stylelint-disable-next-line */
     @apply bg-background text-foreground;
   }
 }
