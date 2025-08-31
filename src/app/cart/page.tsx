@@ -20,6 +20,7 @@ export default function CartPage() {
   const loadCart = async () => {
     try {
       setError(null);
+      setLoading(true);
       const response = await api.getCart();
       
       if (response.status === "success") {
@@ -38,14 +39,9 @@ export default function CartPage() {
   const handleAddToCart = async (productId: string) => {
     try {
       // Call backend API - backend handles all logic
-      const response = await api.updateCart(productId, "add");
-      
-      if (response.status === "success") {
-        // Backend returns updated cart - just display it
-        setCart(response.data);
-      } else {
-        setError('Failed to add item to cart');
-      }
+      await api.updateCart(productId, "add");
+      // Reload entire cart from backend - no frontend state updates
+      await loadCart();
     } catch (err) {
       console.error('Error adding to cart:', err);
       setError('Failed to add item to cart');
@@ -55,14 +51,9 @@ export default function CartPage() {
   const handleSubtractFromCart = async (productId: string) => {
     try {
       // Call backend API - backend handles all logic
-      const response = await api.updateCart(productId, "subtract");
-      
-      if (response.status === "success") {
-        // Backend returns updated cart - just display it
-        setCart(response.data);
-      } else {
-        setError('Failed to remove item from cart');
-      }
+      await api.updateCart(productId, "subtract");
+      // Reload entire cart from backend - no frontend state updates
+      await loadCart();
     } catch (err) {
       console.error('Error removing from cart:', err);
       setError('Failed to remove item from cart');

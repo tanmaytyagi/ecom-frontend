@@ -256,9 +256,39 @@ export const api = {
   // GET /cart
   async getCart(): Promise<ApiResponse<Cart>> {
     await simulateApiDelay(200);
+    
+    // For static demo - always return the same cart data
+    const staticCart: Cart = {
+      cartItems: [
+        {
+          productId: "laptopstand456",
+          name: "Laptop Stand",
+          category: "Electronics",
+          price: 49.99,
+          total: 649.87,
+          quantity: 13
+        },
+        {
+          productId: "wirelessmouse789",
+          name: "Wireless Mouse",
+          category: "Electronics",
+          price: 29.99,
+          total: 29.99,
+          quantity: 1
+        }
+      ],
+      orderSummary: {
+        subtotal: 679.86,
+        taxPercentage: 18,
+        taxAmount: 122.37,
+        total: 802.23
+      },
+      totalItems: 14
+    };
+    
     return {
       status: "success",
-      data: mockCart,
+      data: staticCart,
       message: "cart items retrieved successfully",
       timestamp: new Date().toISOString()
     };
@@ -268,48 +298,39 @@ export const api = {
   async updateCart(productId: string, action: "add" | "subtract"): Promise<ApiResponse<Cart>> {
     await simulateApiDelay(300);
     
-    // Backend logic: Find product
-    const product = mockProducts.find(p => p.id === productId);
-    if (!product) {
-      throw new Error("Product not found");
-    }
-    
-    // Find existing cart item
-    const existingItem = mockCart.cartItems.find(item => item.productId === productId);
-    
-    if (action === "add") {
-      if (existingItem) {
-        existingItem.quantity += 1;
-        existingItem.total = existingItem.price * existingItem.quantity;
-      } else {
-        const newItem: CartItem = {
-          productId,
-          name: product.name,
-          category: product.category,
-          price: product.price,
-          total: product.price,
+    // For static demo - always return the same cart data
+    // In real backend, this would update the cart and return updated data
+    const staticCart: Cart = {
+      cartItems: [
+        {
+          productId: "laptopstand456",
+          name: "Laptop Stand",
+          category: "Electronics",
+          price: 49.99,
+          total: 649.87,
+          quantity: 13
+        },
+        {
+          productId: "wirelessmouse789",
+          name: "Wireless Mouse",
+          category: "Electronics",
+          price: 29.99,
+          total: 29.99,
           quantity: 1
-        };
-        mockCart.cartItems.push(newItem);
-      }
-    } else if (action === "subtract") {
-      if (existingItem) {
-        if (existingItem.quantity > 1) {
-          existingItem.quantity -= 1;
-          existingItem.total = existingItem.price * existingItem.quantity;
-        } else {
-          // Remove item if quantity becomes 0
-          mockCart.cartItems = mockCart.cartItems.filter(item => item.productId !== productId);
         }
-      }
-    }
-
-    // Backend updates cart totals
-    const updatedCart = updateCart(mockCart.cartItems);
+      ],
+      orderSummary: {
+        subtotal: 679.86,
+        taxPercentage: 18,
+        taxAmount: 122.37,
+        total: 802.23
+      },
+      totalItems: 14
+    };
     
     return {
       status: "success",
-      data: updatedCart,
+      data: staticCart,
       message: "cart items retrieved successfully",
       timestamp: new Date().toISOString()
     };
