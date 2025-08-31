@@ -1,70 +1,100 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShoppingBag, AlertCircle, CheckCircle, Plus, Minus } from "lucide-react";
-import { useCart } from "@/contexts/cart-context";
-import { CartItem } from "@/lib/api";
+import { api } from "@/lib/api";
+import { Cart, CartItem } from "@/lib/api";
 import Link from "next/link";
 
 export default function CartPage() {
-  const { cart, loading, error, addToCart, subtractFromCart, clearCart } = useCart();
-  const [clearingCart, setClearingCart] = useState(false);
+  const [cart, setCart] = useState<Cart | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [orderPlaced, setOrderPlaced] = useState(false);
-  const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+
+  // Load cart from backend
+  useEffect(() => {
+    loadCart();
+  }, []);
+
+  const loadCart = async () => {
+    try {
+      setError(null);
+      const response = await api.getCart();
+      
+      if (response.status === "success") {
+        setCart(response.data);
+      } else {
+        setError('Failed to load cart');
+      }
+    } catch (err) {
+      console.error('Error loading cart:', err);
+      setError('Failed to load cart');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddToCart = async (productId: string) => {
-    setUpdatingItems(prev => new Set(prev).add(productId));
     try {
-      await addToCart(productId);
+      // Call backend API - backend handles all logic
+      const response = await api.updateCart(productId, "add");
+      
+      if (response.status === "success") {
+        // Backend returns updated cart - just display it
+        setCart(response.data);
+      } else {
+        setError('Failed to add item to cart');
+      }
     } catch (err) {
       console.error('Error adding to cart:', err);
-    } finally {
-      setUpdatingItems(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(productId);
-        return newSet;
-      });
+      setError('Failed to add item to cart');
     }
   };
 
   const handleSubtractFromCart = async (productId: string) => {
-    setUpdatingItems(prev => new Set(prev).add(productId));
     try {
-      await subtractFromCart(productId);
+      // Call backend API - backend handles all logic
+      const response = await api.updateCart(productId, "subtract");
+      
+      if (response.status === "success") {
+        // Backend returns updated cart - just display it
+        setCart(response.data);
+      } else {
+        setError('Failed to remove item from cart');
+      }
     } catch (err) {
       console.error('Error removing from cart:', err);
-    } finally {
-      setUpdatingItems(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(productId);
-        return newSet;
-      });
+      setError('Failed to remove item from cart');
     }
   };
 
   const handlePlaceOrder = async () => {
-    setClearingCart(true);
     try {
-      await clearCart();
-      setOrderPlaced(true);
-      setTimeout(() => {
-        setOrderPlaced(false);
-      }, 2000);
+      // Call backend API - backend handles all logic
+      const response = await api.clearCart();
+      
+      if (response.status === "success") {
+        setOrderPlaced(true);
+        setTimeout(() => {
+          setOrderPlaced(false);
+          loadCart(); // Reload cart to show empty state
+        }, 2000);
+      } else {
+        setError('Failed to place order');
+      }
     } catch (err) {
       console.error('Error placing order:', err);
-    } finally {
-      setClearingCart(false);
+      setError('Failed to place order');
     }
   };
 
-  if (loading || clearingCart) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-32">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">
-            {clearingCart ? 'Placing order...' : 'Loading cart...'}
-          </p>
+          <p className="text-gray-600">Loading cart...</p>
         </div>
       </div>
     );
@@ -127,6 +157,7 @@ export default function CartPage() {
     );
   }
 
+  // Calculate total items from backend data (just for display)
   const totalItems = cart.cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -151,7 +182,6 @@ export default function CartPage() {
                     item={item} 
                     onAdd={() => handleAddToCart(item.productId)}
                     onSubtract={() => handleSubtractFromCart(item.productId)}
-                    isUpdating={updatingItems.has(item.productId)}
                   />
                 ))}
               </div>
@@ -181,10 +211,9 @@ export default function CartPage() {
 
               <button 
                 onClick={handlePlaceOrder}
-                disabled={clearingCart}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-6"
               >
-                {clearingCart ? 'Placing Order...' : 'Place Order'}
+                Place Order
               </button>
             </div>
           </div>
@@ -198,10 +227,9 @@ interface CartItemCardProps {
   item: CartItem;
   onAdd: () => void;
   onSubtract: () => void;
-  isUpdating: boolean;
 }
 
-function CartItemCard({ item, onAdd, onSubtract, isUpdating }: CartItemCardProps) {
+function CartItemCard({ item, onAdd, onSubtract }: CartItemCardProps) {
   return (
     <div className="flex gap-4 p-4 border rounded-lg">
       <div className="flex-1 min-w-0">
@@ -219,8 +247,7 @@ function CartItemCard({ item, onAdd, onSubtract, isUpdating }: CartItemCardProps
           <div className="flex items-center gap-2">
             <button
               onClick={onSubtract}
-              disabled={isUpdating}
-              className="p-1 rounded border hover:bg-gray-50 disabled:opacity-50"
+              className="p-1 rounded border hover:bg-gray-50"
             >
               <Minus className="h-4 w-4" />
             </button>
@@ -229,8 +256,7 @@ function CartItemCard({ item, onAdd, onSubtract, isUpdating }: CartItemCardProps
             
             <button
               onClick={onAdd}
-              disabled={isUpdating}
-              className="p-1 rounded border hover:bg-gray-50 disabled:opacity-50"
+              className="p-1 rounded border hover:bg-gray-50"
             >
               <Plus className="h-4 w-4" />
             </button>
