@@ -49,6 +49,7 @@ export interface CartItem {
 export interface OrderSummary {
   subtotal: number;
   taxPercentage: number;
+  taxAmount: number;
   total: number;
 }
 
@@ -159,6 +160,7 @@ let mockCart: Cart = {
   orderSummary: {
     subtotal: 0,
     taxPercentage: 18,
+    taxAmount: 0,
     total: 0
   }
 };
@@ -174,11 +176,13 @@ const simulateApiDelay = (ms: number = 200) => new Promise(resolve => setTimeout
 const calculateCartTotals = (items: CartItem[]) => {
   const subtotal = items.reduce((sum, item) => sum + item.total, 0);
   const taxPercentage = 18;
-  const total = subtotal + (subtotal * (taxPercentage / 100));
+  const taxAmount = subtotal * (taxPercentage / 100);
+  const total = subtotal + taxAmount;
 
   return {
     subtotal: Math.round(subtotal * 100) / 100,
     taxPercentage,
+    taxAmount: Math.round(taxAmount * 100) / 100,
     total: Math.round(total * 100) / 100
   };
 };
@@ -317,6 +321,7 @@ export const api = {
       orderSummary: {
         subtotal: 0,
         taxPercentage: 18,
+        taxAmount: 0,
         total: 0
       }
     };

@@ -157,16 +157,13 @@ export default function CartPage() {
     );
   }
 
-  // Calculate total items from backend data (just for display)
-  const totalItems = cart.cartItems.reduce((sum, item) => sum + item.quantity, 0);
-
   return (
     <div className="bg-gray-50 py-8">
       <div className="container mx-auto px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Shopping Cart</h1>
           <p className="text-gray-600">
-            {totalItems} {totalItems === 1 ? 'item' : 'items'} in your cart
+            {cart.cartItems.length} {cart.cartItems.length === 1 ? 'item' : 'items'} in your cart
           </p>
         </div>
 
@@ -199,7 +196,7 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Tax ({cart.orderSummary.taxPercentage}%)</span>
-                  <span className="font-medium">${(cart.orderSummary.subtotal * (cart.orderSummary.taxPercentage / 100)).toFixed(2)}</span>
+                  <span className="font-medium">${cart.orderSummary.taxAmount.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
