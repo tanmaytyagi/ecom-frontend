@@ -8,54 +8,18 @@ All API endpoints return a standardized response:
 
 ```typescript
 interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
+  status: string;
+  data: T;
   message: string;
+  timestamp: string;
 }
 ```
 
 ## 🔌 API Endpoints
 
-### 1. Homepage
+### 1. Homepage Data
 
-#### GET /api/homepage
-**Response:** `ApiResponse<HomePageData>`
-
-```typescript
-interface HomePageData {
-  featuredProducts: Product[];
-  categories: Category[];
-  heroBanner: {
-    title: string;
-    subtitle: string;
-    ctaText: string;
-    ctaLink: string;
-  };
-}
-```
-
-**Example Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "featuredProducts": [...],
-    "categories": [...],
-    "heroBanner": {
-      "title": "Discover Amazing Tech Products",
-      "subtitle": "Find the latest gadgets and electronics at unbeatable prices",
-      "ctaText": "Shop Now",
-      "ctaLink": "/products"
-    }
-  },
-  "message": "Homepage data retrieved successfully"
-}
-```
-
-### 2. Products
-
-#### GET /api/products
+#### GET /home/featured
 **Response:** `ApiResponse<Product[]>`
 
 ```typescript
@@ -63,195 +27,270 @@ interface Product {
   id: string;
   name: string;
   description: string;
+  image: string;
   price: number;
   category: string;
-  image: string;
 }
 ```
 
 **Example Response:**
 ```json
 {
-  "success": true,
+  "status": "success",
   "data": [
     {
-      "id": "1",
+      "id": "aabdbb5b",
       "name": "Wireless Headphones",
       "description": "High-quality wireless headphones with noise cancellation",
+      "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
       "price": 99.99,
-      "category": "Electronics",
-      "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop"
+      "category": "Electronics"
     }
   ],
-  "message": "Products retrieved successfully"
+  "message": "featured products retrieved successfully",
+  "timestamp": "2025-05-15T14:12:00Z"
+}
+```
+
+#### GET /home/categories
+**Response:** `ApiResponse<Category[]>`
+
+```typescript
+interface Category {
+  name: string;
+  image: string;
+  totalProducts: number;
+}
+```
+
+**Example Response:**
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "name": "Electronics",
+      "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
+      "totalProducts": 13
+    }
+  ],
+  "message": "categories retrieved successfully",
+  "timestamp": "2025-05-15T14:12:00Z"
+}
+```
+
+### 2. Products
+
+#### GET /products
+**Response:** `ApiResponse<Product[]>`
+
+**Example Response:**
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "id": "aabdbb5b",
+      "name": "Wireless Headphones",
+      "description": "High-quality wireless headphones with noise cancellation",
+      "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
+      "price": 99.99,
+      "category": "Electronics"
+    }
+  ],
+  "message": "products retrieved successfully",
+  "timestamp": "2025-05-15T14:12:00Z"
+}
+```
+
+#### GET /products/:category
+**Response:** `ApiResponse<Product[]>`
+
+**Example Response:**
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "id": "aabdbb5b",
+      "name": "Wireless Headphones",
+      "description": "High-quality wireless headphones with noise cancellation",
+      "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
+      "price": 99.99,
+      "category": "Electronics"
+    }
+  ],
+  "message": "products retrieved successfully",
+  "timestamp": "2025-05-15T14:12:00Z"
 }
 ```
 
 ### 3. Cart
 
-#### GET /api/cart
+#### GET /cart
 **Response:** `ApiResponse<Cart>`
 
 ```typescript
 interface Cart {
-  cartId: string;
-  items: CartItem[];
-  subtotal: number;
-  tax: number;
-  total: number;
+  cartItems: CartItem[];
+  orderSummary: OrderSummary;
 }
 
 interface CartItem {
-  id: string;
+  productId: string;
   name: string;
-  price: number;
-  image: string;
-  quantity: number;
   category: string;
-  description: string;
+  price: number;
+  total: number;
+  quantity: number;
+}
+
+interface OrderSummary {
+  subtotal: number;
+  taxPercentage: number;
+  total: number;
 }
 ```
 
 **Example Response:**
 ```json
 {
-  "success": true,
+  "status": "success",
   "data": {
-    "cartId": "cart-1",
-    "items": [
+    "cartItems": [
       {
-        "id": "1",
-        "name": "Wireless Headphones",
-        "price": 99.99,
-        "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
-        "quantity": 2,
+        "productId": "acw23eae",
+        "name": "Smart Watch",
         "category": "Electronics",
-        "description": "High-quality wireless headphones with noise cancellation"
+        "price": 99.00,
+        "total": 198.00,
+        "quantity": 2
       }
     ],
-    "subtotal": 199.98,
-    "tax": 16.00,
-    "total": 215.98
+    "orderSummary": {
+      "subtotal": 218.00,
+      "taxPercentage": 18,
+      "total": 257.24
+    }
   },
-  "message": "Cart retrieved successfully"
+  "message": "cart items retrieved successfully",
+  "timestamp": "2025-05-15T14:12:00Z"
 }
 ```
 
-#### POST /api/cart (Add to cart)
+#### POST /cart
 **Request Body:**
 ```typescript
 {
-  cartId: string;
   productId: string;
+  action: "add" | "subtract";
 }
 ```
 
 **Response:** `ApiResponse<Cart>`
 
+**Example Request:**
+```json
+{
+  "productId": "bres4efd",
+  "action": "add"
+}
+```
+
 **Example Response:**
 ```json
 {
-  "success": true,
+  "status": "success",
   "data": {
-    "cartId": "cart-1",
-    "items": [...],
-    "subtotal": 199.98,
-    "tax": 16.00,
-    "total": 215.98
+    "cartItems": [
+      {
+        "productId": "acw23eae",
+        "name": "Smart Watch",
+        "category": "Electronics",
+        "price": 99.00,
+        "total": 198.00,
+        "quantity": 2
+      },
+      {
+        "productId": "bres4efd",
+        "name": "T Shirt",
+        "category": "Clothing",
+        "price": 20.00,
+        "total": 40.00,
+        "quantity": 2
+      }
+    ],
+    "orderSummary": {
+      "subtotal": 238.00,
+      "taxPercentage": 18,
+      "total": 280.84
+    }
   },
-  "message": "Cart updated successfully"
+  "message": "cart items retrieved successfully",
+  "timestamp": "2025-05-15T14:12:00Z"
 }
 ```
 
-#### GET /api/addtocart/:productId
-**Response:** `ApiResponse<{ message: string }>`
+#### GET /cart/clearcart
+**Response:** `ApiResponse<any>`
 
 **Example Response:**
 ```json
 {
-  "success": true,
-  "message": "Cart updated successfully"
-}
-```
-
-#### GET /api/removefromcart/:productId
-**Response:** `ApiResponse<{ message: string }>`
-
-**Example Response:**
-```json
-{
-  "success": true,
-  "message": "Cart updated successfully"
-}
-```
-
-#### GET /api/clearcart
-**Response:** `ApiResponse<{ cartId: string }>`
-
-**Example Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "cartId": "cart-1"
-  },
-  "message": "Cart cleared successfully"
+  "status": "success",
+  "data": [],
+  "message": "cart cleared successfully",
+  "timestamp": "2025-05-15T14:12:00Z"
 }
 ```
 
 ## 🛒 Cart Business Logic (Backend Implementation)
 
 ### Tax Calculation
-- **Tax Rate:** 8%
-- **Formula:** `tax = subtotal * 0.08`
+- **Tax Rate:** 18%
+- **Formula:** `total = subtotal + (subtotal * (taxPercentage / 100))`
 
 ### Cart Totals
-- **Subtotal:** Sum of (item.price * item.quantity) for all items
-- **Tax:** 8% of subtotal
+- **Subtotal:** Sum of item.total for all items
+- **Tax:** 18% of subtotal
 - **Total:** subtotal + tax
 
 ### Cart Operations
 1. **Add to Cart:** Increment quantity if item exists, add new item if not
-2. **Remove from Cart:** Decrement quantity, remove item if quantity becomes 0
+2. **Subtract from Cart:** Decrement quantity, remove item if quantity becomes 0
 3. **Clear Cart:** Remove all items and reset totals to 0
 
 ## 🔄 Frontend-Backend Flow
 
 ### Homepage Flow
 1. User visits homepage
-2. Frontend calls `GET /api/homepage`
-3. Backend returns hero banner, featured products, categories
+2. Frontend calls `GET /home/featured` and `GET /home/categories`
+3. Backend returns featured products and categories
 4. Frontend displays exactly what backend returns
 
 ### Products Page Flow
 1. User visits products page
-2. Frontend calls `GET /api/products`
-3. Backend returns all products
-4. Frontend displays product cards with +/- buttons
+2. Frontend calls `GET /products` or `GET /products/:category`
+3. Backend returns products (all or filtered by category)
+4. Frontend displays product cards with "Add to Cart" buttons
 
 ### Add to Cart Flow
-1. User clicks "+" button on product card
-2. Frontend calls `GET /api/addtocart/:productId`
-3. Backend internally updates cart and returns success message
-4. Frontend refreshes cart state by calling `GET /api/cart`
-
-### Remove from Cart Flow
-1. User clicks "-" button on product card
-2. Frontend calls `GET /api/removefromcart/:productId`
-3. Backend internally updates cart and returns success message
-4. Frontend refreshes cart state by calling `GET /api/cart`
+1. User clicks "Add to Cart" button on product card
+2. Frontend calls `POST /cart` with `{"productId": "id", "action": "add"}`
+3. Backend internally updates cart and returns updated cart
+4. Frontend displays updated cart state
 
 ### Cart Page Flow
 1. User visits cart page
-2. Frontend calls `GET /api/cart`
+2. Frontend calls `GET /cart`
 3. Backend returns current cart with calculated totals
 4. Frontend displays cart items and totals exactly as returned
 
-### Clear Cart Flow
-1. User clicks "Clear Cart" button
-2. Frontend calls `GET /api/clearcart`
-3. Backend clears cart and returns cartId
-4. Frontend refreshes cart state by calling `GET /api/cart`
+### Place Order Flow
+1. User clicks "Place Order" button
+2. Frontend shows "Order Placed!" animation
+3. Frontend calls `GET /cart/clearcart`
+4. Frontend refreshes cart state and shows empty cart
 
 ## 🚀 Implementation Notes
 
@@ -259,13 +298,13 @@ interface CartItem {
 - **No Client-Side Logic:** Frontend never calculates totals or validates data
 - **Display Only:** Frontend just displays what the backend returns
 - **Simple API Calls:** Every action calls a simple GET/POST endpoint
-- **Refresh Pattern:** After cart modifications, frontend refreshes cart state
+- **Backend-Driven State:** Cart state is always fetched from backend
 
 ### Backend Requirements
 - **Single Source of Truth:** All cart state and calculations on server
-- **Simple Endpoints:** GET endpoints for most operations
+- **Simple Endpoints:** GET/POST endpoints for operations
 - **Consistent Response:** Always return `ApiResponse<T>` format
-- **Internal Updates:** Cart modifications happen internally, return success message
+- **Internal Updates:** Cart modifications happen internally, return updated cart
 
 ### Database Schema (Suggested)
 ```sql

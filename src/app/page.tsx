@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { ProductCard } from "@/components/ui/product-card";
 import { CategoryCard } from "@/components/ui/category-card";
 import { api } from "@/lib/api";
-import { HomePageData } from "@/lib/api";
+import { Product, Category } from "@/lib/api";
 import { AlertCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function HomePage() {
-  const [data, setData] = useState<HomePageData | null>(null);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,13 +18,17 @@ export default function HomePage() {
     async function loadHomePageData() {
       try {
         setError(null);
-        // Call backend API - backend returns all homepage data
-        const response = await api.getHomePageData();
+        // Call backend APIs - backend returns all homepage data
+        const [featuredResponse, categoriesResponse] = await Promise.all([
+          api.getFeaturedProducts(),
+          api.getCategories()
+        ]);
         
-        if (response.success && response.data) {
-          setData(response.data);
+        if (featuredResponse.status === "success" && categoriesResponse.status === "success") {
+          setFeaturedProducts(featuredResponse.data);
+          setCategories(categoriesResponse.data);
         } else {
-          setError(response.error || 'Failed to load homepage data');
+          setError('Failed to load homepage data');
         }
       } catch (error) {
         console.error('Failed to load homepage data:', error);
@@ -47,7 +52,7 @@ export default function HomePage() {
     );
   }
 
-  if (error || !data) {
+  if (error) {
     return (
       <div className="bg-gray-50 py-8">
         <div className="container mx-auto px-4">
@@ -57,7 +62,7 @@ export default function HomePage() {
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-4">Something went wrong</h1>
             <p className="text-gray-600 mb-8">
-              {error || 'Failed to load homepage data'}
+              {error}
             </p>
             <button 
               onClick={() => window.location.reload()}
@@ -77,14 +82,14 @@ export default function HomePage() {
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-16">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            {data.heroBanner.title}
+            Discover Amazing Tech Products
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-blue-100">
-            {data.heroBanner.subtitle}
+            Find the latest gadgets and electronics at unbeatable prices
           </p>
-          <Link href={data.heroBanner.ctaLink}>
+          <Link href="/products">
             <button className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors">
-              {data.heroBanner.ctaText}
+              Shop Now
             </button>
           </Link>
         </div>
@@ -99,7 +104,7 @@ export default function HomePage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {data.featuredProducts.map((product) => (
+            {featuredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
@@ -123,8 +128,8 @@ export default function HomePage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {data.categories.map((category) => (
-              <CategoryCard key={category.id} category={category} />
+            {categories.map((category) => (
+              <CategoryCard key={category.name} category={category} />
             ))}
           </div>
         </div>

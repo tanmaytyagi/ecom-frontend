@@ -10,7 +10,7 @@ interface CartContextType {
   loading: boolean;
   error: string | null;
   addToCart: (productId: string) => Promise<void>;
-  removeFromCart: (productId: string) => Promise<void>;
+  subtractFromCart: (productId: string) => Promise<void>;
   clearCart: () => Promise<void>;
   refreshCart: () => Promise<void>;
 }
@@ -32,10 +32,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setError(null);
       const response = await api.getCart();
       
-      if (response.success && response.data) {
+      if (response.status === "success") {
         setCart(response.data);
       } else {
-        setError(response.error || 'Failed to load cart');
+        setError('Failed to load cart');
       }
     } catch (err) {
       console.error('Error loading cart:', err);
@@ -49,14 +49,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
       // Call backend API - backend handles all logic
-      const response = await api.addToCartByProductId(productId);
+      const response = await api.updateCart(productId, "add");
       
-      if (response.success) {
-        // Refresh cart to get updated state from backend
-        await refreshCart();
+      if (response.status === "success") {
+        setCart(response.data);
       } else {
-        setError(response.error || 'Failed to add item to cart');
-        throw new Error(response.error || 'Failed to add item to cart');
+        setError('Failed to add item to cart');
+        throw new Error('Failed to add item to cart');
       }
     } catch (err) {
       console.error('Error adding to cart:', err);
@@ -65,18 +64,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const removeFromCart = async (productId: string) => {
+  const subtractFromCart = async (productId: string) => {
     try {
       setError(null);
       // Call backend API - backend handles all logic
-      const response = await api.removeFromCartByProductId(productId);
+      const response = await api.updateCart(productId, "subtract");
       
-      if (response.success) {
-        // Refresh cart to get updated state from backend
-        await refreshCart();
+      if (response.status === "success") {
+        setCart(response.data);
       } else {
-        setError(response.error || 'Failed to remove item from cart');
-        throw new Error(response.error || 'Failed to remove item from cart');
+        setError('Failed to remove item from cart');
+        throw new Error('Failed to remove item from cart');
       }
     } catch (err) {
       console.error('Error removing from cart:', err);
@@ -91,12 +89,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // Call backend API - backend handles all logic
       const response = await api.clearCart();
       
-      if (response.success) {
+      if (response.status === "success") {
         // Refresh cart to get updated state from backend
         await refreshCart();
       } else {
-        setError(response.error || 'Failed to clear cart');
-        throw new Error(response.error || 'Failed to clear cart');
+        setError('Failed to clear cart');
+        throw new Error('Failed to clear cart');
       }
     } catch (err) {
       console.error('Error clearing cart:', err);
@@ -105,7 +103,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const cartCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  const cartCount = cart?.cartItems.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
   const value: CartContextType = {
     cart,
@@ -113,7 +111,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     loading,
     error,
     addToCart,
-    removeFromCart,
+    subtractFromCart,
     clearCart,
     refreshCart,
   };

@@ -4,10 +4,10 @@
 
 // Generic API Response
 export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
+  status: string;
+  data: T;
   message: string;
+  timestamp: string;
 }
 
 // ============================================================================
@@ -18,9 +18,19 @@ export interface Product {
   id: string;
   name: string;
   description: string;
+  image: string;
   price: number;
   category: string;
+}
+
+// ============================================================================
+// CATEGORY API CONTRACTS
+// ============================================================================
+
+export interface Category {
+  name: string;
   image: string;
+  totalProducts: number;
 }
 
 // ============================================================================
@@ -28,43 +38,23 @@ export interface Product {
 // ============================================================================
 
 export interface CartItem {
-  id: string;
+  productId: string;
   name: string;
-  price: number;
-  image: string;
-  quantity: number;
   category: string;
-  description: string;
+  price: number;
+  total: number;
+  quantity: number;
 }
 
-export interface Cart {
-  cartId: string;
-  items: CartItem[];
+export interface OrderSummary {
   subtotal: number;
-  tax: number;
+  taxPercentage: number;
   total: number;
 }
 
-// ============================================================================
-// HOMEPAGE API CONTRACTS
-// ============================================================================
-
-export interface Category {
-  id: string;
-  name: string;
-  image: string;
-  productCount: number;
-}
-
-export interface HomePageData {
-  featuredProducts: Product[];
-  categories: Category[];
-  heroBanner: {
-    title: string;
-    subtitle: string;
-    ctaText: string;
-    ctaLink: string;
-  };
+export interface Cart {
+  cartItems: CartItem[];
+  orderSummary: OrderSummary;
 }
 
 // ============================================================================
@@ -74,106 +64,103 @@ export interface HomePageData {
 // Mock products database
 const mockProducts: Product[] = [
   {
-    id: "1",
+    id: "aabdbb5b",
     name: "Wireless Headphones",
     description: "High-quality wireless headphones with noise cancellation",
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
     price: 99.99,
-    category: "Electronics",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop"
+    category: "Electronics"
   },
   {
-    id: "2",
+    id: "smartwatch123",
     name: "Smart Watch",
     description: "Feature-rich smartwatch with health tracking",
+    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop",
     price: 199.99,
-    category: "Electronics",
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop"
+    category: "Electronics"
   },
   {
-    id: "3",
+    id: "laptopstand456",
     name: "Laptop Stand",
     description: "Ergonomic laptop stand for better posture",
+    image: "https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=300&h=300&fit=crop",
     price: 49.99,
-    category: "Electronics",
-    image: "https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=300&h=300&fit=crop"
+    category: "Electronics"
   },
   {
-    id: "4",
+    id: "wirelessmouse789",
     name: "Wireless Mouse",
     description: "Precision wireless mouse for productivity",
+    image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=300&h=300&fit=crop",
     price: 29.99,
-    category: "Electronics",
-    image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=300&h=300&fit=crop"
+    category: "Electronics"
   },
   {
-    id: "5",
-    name: "Cotton T-Shirt",
+    id: "tshirt101",
+    name: "T Shirt",
     description: "Comfortable cotton t-shirt in various colors",
+    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop",
     price: 24.99,
-    category: "Clothing",
-    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop"
+    category: "Clothing"
   },
   {
-    id: "6",
+    id: "denimjeans202",
     name: "Denim Jeans",
     description: "Classic denim jeans with perfect fit",
+    image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=300&fit=crop",
     price: 79.99,
-    category: "Clothing",
-    image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=300&fit=crop"
+    category: "Clothing"
   },
   {
-    id: "7",
+    id: "programmingbook303",
     name: "Programming Book",
     description: "Comprehensive guide to modern programming",
+    image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=300&fit=crop",
     price: 49.99,
-    category: "Books",
-    image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=300&fit=crop"
+    category: "Books"
   },
   {
-    id: "8",
+    id: "yogamat404",
     name: "Yoga Mat",
     description: "Non-slip yoga mat for home workouts",
+    image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=300&h=300&fit=crop",
     price: 29.99,
-    category: "Sports",
-    image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=300&h=300&fit=crop"
+    category: "Sports"
   }
 ];
 
 // Mock categories database
 const mockCategories: Category[] = [
   {
-    id: "1",
     name: "Electronics",
     image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=300&h=200&fit=crop",
-    productCount: 4
+    totalProducts: 13
   },
   {
-    id: "2",
     name: "Clothing",
     image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=200&fit=crop",
-    productCount: 2
+    totalProducts: 15
   },
   {
-    id: "3",
     name: "Books",
     image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=200&fit=crop",
-    productCount: 1
+    totalProducts: 7
   },
   {
-    id: "4",
     name: "Sports",
     image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=300&h=200&fit=crop",
-    productCount: 1
+    totalProducts: 10
   }
 ];
 
 // Mock cart storage (simulates user session/database)
 let mockCart: Cart = {
-  cartId: "cart-1",
-  items: [],
-  subtotal: 0,
-  tax: 0,
-  total: 0
+  cartItems: [],
+  orderSummary: {
+    subtotal: 0,
+    taxPercentage: 18,
+    total: 0
+  }
 };
 
 // ============================================================================
@@ -185,24 +172,23 @@ const simulateApiDelay = (ms: number = 200) => new Promise(resolve => setTimeout
 
 // Helper function to calculate cart totals (Backend logic)
 const calculateCartTotals = (items: CartItem[]) => {
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.08; // 8% tax
-  const total = subtotal + tax;
+  const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+  const taxPercentage = 18;
+  const total = subtotal + (subtotal * (taxPercentage / 100));
 
   return {
     subtotal: Math.round(subtotal * 100) / 100,
-    tax: Math.round(tax * 100) / 100,
+    taxPercentage,
     total: Math.round(total * 100) / 100
   };
 };
 
 // Helper function to update cart (Backend logic)
 const updateCart = (items: CartItem[]) => {
-  const totals = calculateCartTotals(items);
+  const orderSummary = calculateCartTotals(items);
   mockCart = {
-    ...mockCart,
-    items,
-    ...totals
+    cartItems: items,
+    orderSummary
   };
   return mockCart;
 };
@@ -210,176 +196,136 @@ const updateCart = (items: CartItem[]) => {
 export const api = {
   // ===== HOMEPAGE ENDPOINTS =====
   
-  // GET /api/homepage
-  async getHomePageData(): Promise<ApiResponse<HomePageData>> {
+  // GET /home/featured
+  async getFeaturedProducts(): Promise<ApiResponse<Product[]>> {
     await simulateApiDelay(400);
     return {
-      success: true,
-      data: {
-        featuredProducts: mockProducts.slice(0, 4),
-        categories: mockCategories,
-        heroBanner: {
-          title: "Discover Amazing Tech Products",
-          subtitle: "Find the latest gadgets and electronics at unbeatable prices",
-          ctaText: "Shop Now",
-          ctaLink: "/products"
-        }
-      },
-      message: "Homepage data retrieved successfully"
+      status: "success",
+      data: mockProducts.slice(0, 4),
+      message: "featured products retrieved successfully",
+      timestamp: new Date().toISOString()
+    };
+  },
+
+  // GET /home/categories
+  async getCategories(): Promise<ApiResponse<Category[]>> {
+    await simulateApiDelay(300);
+    return {
+      status: "success",
+      data: mockCategories,
+      message: "categories retrieved successfully",
+      timestamp: new Date().toISOString()
     };
   },
 
   // ===== PRODUCT ENDPOINTS =====
   
-  // GET /api/products
+  // GET /products
   async getProducts(): Promise<ApiResponse<Product[]>> {
     await simulateApiDelay(300);
     return {
-      success: true,
+      status: "success",
       data: mockProducts,
-      message: "Products retrieved successfully"
+      message: "products retrieved successfully",
+      timestamp: new Date().toISOString()
+    };
+  },
+
+  // GET /products/:category
+  async getProductsByCategory(category: string): Promise<ApiResponse<Product[]>> {
+    await simulateApiDelay(300);
+    const filteredProducts = mockProducts.filter(product => product.category === category);
+    return {
+      status: "success",
+      data: filteredProducts,
+      message: "products retrieved successfully",
+      timestamp: new Date().toISOString()
     };
   },
 
   // ===== CART ENDPOINTS =====
   
-  // GET /api/cart
+  // GET /cart
   async getCart(): Promise<ApiResponse<Cart>> {
     await simulateApiDelay(200);
     return {
-      success: true,
+      status: "success",
       data: mockCart,
-      message: "Cart retrieved successfully"
+      message: "cart items retrieved successfully",
+      timestamp: new Date().toISOString()
     };
   },
 
-  // POST /api/cart (Add to cart)
-  async addToCart(cartId: string, productId: string): Promise<ApiResponse<Cart>> {
+  // POST /cart
+  async updateCart(productId: string, action: "add" | "subtract"): Promise<ApiResponse<Cart>> {
     await simulateApiDelay(300);
     
-    // Backend logic: Find product and add to cart
+    // Backend logic: Find product
     const product = mockProducts.find(p => p.id === productId);
     if (!product) {
-      return {
-        success: false,
-        error: "Product not found",
-        message: "Product not found"
-      };
+      throw new Error("Product not found");
     }
     
-    // Check if item already exists in cart
-    const existingItem = mockCart.items.find(item => item.id === productId);
+    // Find existing cart item
+    const existingItem = mockCart.cartItems.find(item => item.productId === productId);
     
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      const newItem: CartItem = {
-        id: productId,
-        name: product.name,
-        price: product.price,
-        image: product.image,
-        quantity: 1,
-        category: product.category,
-        description: product.description
-      };
-      mockCart.items.push(newItem);
+    if (action === "add") {
+      if (existingItem) {
+        existingItem.quantity += 1;
+        existingItem.total = existingItem.price * existingItem.quantity;
+      } else {
+        const newItem: CartItem = {
+          productId,
+          name: product.name,
+          category: product.category,
+          price: product.price,
+          total: product.price,
+          quantity: 1
+        };
+        mockCart.cartItems.push(newItem);
+      }
+    } else if (action === "subtract") {
+      if (existingItem) {
+        if (existingItem.quantity > 1) {
+          existingItem.quantity -= 1;
+          existingItem.total = existingItem.price * existingItem.quantity;
+        } else {
+          // Remove item if quantity becomes 0
+          mockCart.cartItems = mockCart.cartItems.filter(item => item.productId !== productId);
+        }
+      }
     }
 
     // Backend updates cart totals
-    const updatedCart = updateCart(mockCart.items);
+    const updatedCart = updateCart(mockCart.cartItems);
     
     return {
-      success: true,
+      status: "success",
       data: updatedCart,
-      message: "Cart updated successfully"
+      message: "cart items retrieved successfully",
+      timestamp: new Date().toISOString()
     };
   },
 
-  // GET /api/addtocart/:productId
-  async addToCartByProductId(productId: string): Promise<ApiResponse<{ message: string }>> {
-    await simulateApiDelay(300);
-    
-    // Backend logic: Find product and add to cart
-    const product = mockProducts.find(p => p.id === productId);
-    if (!product) {
-      return {
-        success: false,
-        error: "Product not found",
-        message: "Product not found"
-      };
-    }
-    
-    // Check if item already exists in cart
-    const existingItem = mockCart.items.find(item => item.id === productId);
-    
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      const newItem: CartItem = {
-        id: productId,
-        name: product.name,
-        price: product.price,
-        image: product.image,
-        quantity: 1,
-        category: product.category,
-        description: product.description
-      };
-      mockCart.items.push(newItem);
-    }
-
-    // Backend updates cart totals
-    updateCart(mockCart.items);
-    
-    return {
-      success: true,
-      message: "Cart updated successfully"
-    };
-  },
-
-  // GET /api/removefromcart/:productId
-  async removeFromCartByProductId(productId: string): Promise<ApiResponse<{ message: string }>> {
-    await simulateApiDelay(200);
-    
-    // Backend logic: Remove item from cart
-    const existingItem = mockCart.items.find(item => item.id === productId);
-    
-    if (!existingItem) {
-      return {
-        success: false,
-        error: "Item not found in cart",
-        message: "Item not found in cart"
-      };
-    }
-    
-    if (existingItem.quantity > 1) {
-      existingItem.quantity -= 1;
-    } else {
-      mockCart.items = mockCart.items.filter(item => item.id !== productId);
-    }
-
-    // Backend updates cart totals
-    updateCart(mockCart.items);
-    
-    return {
-      success: true,
-      message: "Cart updated successfully"
-    };
-  },
-
-  // GET /api/clearcart
-  async clearCart(): Promise<ApiResponse<{ cartId: string }>> {
+  // GET /cart/clearcart
+  async clearCart(): Promise<ApiResponse<any>> {
     await simulateApiDelay(200);
     
     // Backend clears cart
-    mockCart.items = [];
-    updateCart(mockCart.items);
+    mockCart = {
+      cartItems: [],
+      orderSummary: {
+        subtotal: 0,
+        taxPercentage: 18,
+        total: 0
+      }
+    };
     
     return {
-      success: true,
-      data: {
-        cartId: mockCart.cartId
-      },
-      message: "Cart cleared successfully"
+      status: "success",
+      data: [],
+      message: "cart cleared successfully",
+      timestamp: new Date().toISOString()
     };
   }
 };

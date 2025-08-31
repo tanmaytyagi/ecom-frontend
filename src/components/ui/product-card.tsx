@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Product } from "@/lib/api";
 import { useCart } from "@/contexts/cart-context";
-import { AlertCircle, Plus, Minus } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
@@ -11,9 +11,8 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const [isAdding, setIsAdding] = useState(false);
-  const [isRemoving, setIsRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { cart, addToCart, removeFromCart } = useCart();
+  const { addToCart } = useCart();
 
   const handleAddToCart = async () => {
     setIsAdding(true);
@@ -29,24 +28,6 @@ export function ProductCard({ product }: ProductCardProps) {
       setIsAdding(false);
     }
   };
-
-  const handleRemoveFromCart = async () => {
-    setIsRemoving(true);
-    setError(null);
-    
-    try {
-      // Call backend API - backend handles all logic
-      await removeFromCart(product.id);
-    } catch (error) {
-      console.error('Failed to remove from cart:', error);
-      setError(error instanceof Error ? error.message : 'Failed to remove from cart');
-    } finally {
-      setIsRemoving(false);
-    }
-  };
-
-  // Get current quantity from cart (backend state)
-  const currentQuantity = cart?.items.find(item => item.id === product.id)?.quantity || 0;
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200">
@@ -81,33 +62,17 @@ export function ProductCard({ product }: ProductCardProps) {
             ${product.price.toFixed(2)}
           </span>
           
-          {/* Cart Controls */}
-          <div className="flex items-center gap-2">
-            {currentQuantity > 0 && (
-              <>
-                <button
-                  onClick={handleRemoveFromCart}
-                  disabled={isRemoving || isAdding}
-                  className="p-1 rounded border hover:bg-gray-50 disabled:opacity-50"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="w-8 text-center font-medium">{currentQuantity}</span>
-              </>
-            )}
-            
-            <button
-              onClick={handleAddToCart}
-              disabled={isAdding || isRemoving}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                isAdding
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
-            >
-              {isAdding ? 'Adding...' : currentQuantity > 0 ? '+' : 'Add to Cart'}
-            </button>
-          </div>
+          <button
+            onClick={handleAddToCart}
+            disabled={isAdding}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              isAdding
+                ? 'bg-green-100 text-green-800'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {isAdding ? 'Added!' : 'Add to Cart'}
+          </button>
         </div>
       </div>
     </div>

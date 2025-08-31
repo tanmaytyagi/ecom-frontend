@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShoppingBag, AlertCircle } from "lucide-react";
+import { ShoppingBag, AlertCircle, CheckCircle } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
 import { CartItem } from "@/lib/api";
 import Link from "next/link";
@@ -9,14 +9,20 @@ import Link from "next/link";
 export default function CartPage() {
   const { cart, loading, error, clearCart } = useCart();
   const [clearingCart, setClearingCart] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
 
-  const handleClearCart = async () => {
+  const handlePlaceOrder = async () => {
     setClearingCart(true);
     try {
       // Call backend API - backend handles all logic
       await clearCart();
+      setOrderPlaced(true);
+      // Show order placed animation for 2 seconds
+      setTimeout(() => {
+        setOrderPlaced(false);
+      }, 2000);
     } catch (err) {
-      console.error('Error clearing cart:', err);
+      console.error('Error placing order:', err);
     } finally {
       setClearingCart(false);
     }
@@ -28,8 +34,21 @@ export default function CartPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">
-            {clearingCart ? 'Clearing cart...' : 'Loading cart...'}
+            {clearingCart ? 'Placing order...' : 'Loading cart...'}
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show order placed animation
+  if (orderPlaced) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <div className="text-center">
+          <CheckCircle className="mx-auto h-24 w-24 text-green-500 mb-4" />
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Order Placed!</h1>
+          <p className="text-gray-600">Thank you for your order</p>
         </div>
       </div>
     );
@@ -61,7 +80,7 @@ export default function CartPage() {
   }
 
   // Show empty cart if no cart or no items
-  if (!cart || cart.items.length === 0) {
+  if (!cart || cart.cartItems.length === 0) {
     return (
       <div className="bg-gray-50 py-8">
         <div className="container mx-auto px-4">
@@ -84,7 +103,7 @@ export default function CartPage() {
     );
   }
 
-  const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = cart.cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <div className="bg-gray-50 py-8">
@@ -101,20 +120,11 @@ export default function CartPage() {
           {/* Cart Items */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Cart Items</h2>
-                <button 
-                  onClick={handleClearCart}
-                  disabled={clearingCart}
-                  className="text-red-600 hover:text-red-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {clearingCart ? 'Clearing...' : 'Clear Cart'}
-                </button>
-              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Cart Items</h2>
               
               <div className="space-y-4">
-                {cart.items.map((item) => (
-                  <CartItemCard key={item.id} item={item} />
+                {cart.cartItems.map((item) => (
+                  <CartItemCard key={item.productId} item={item} />
                 ))}
               </div>
             </div>
@@ -128,22 +138,26 @@ export default function CartPage() {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">${cart.subtotal.toFixed(2)}</span>
+                  <span className="font-medium">${cart.orderSummary.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (8%)</span>
-                  <span className="font-medium">${cart.tax.toFixed(2)}</span>
+                  <span className="text-gray-600">Tax ({cart.orderSummary.taxPercentage}%)</span>
+                  <span className="font-medium">${(cart.orderSummary.subtotal * (cart.orderSummary.taxPercentage / 100)).toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
-                    <span>${cart.total.toFixed(2)}</span>
+                    <span>${cart.orderSummary.total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
 
-              <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-6">
-                Proceed to Checkout
+              <button 
+                onClick={handlePlaceOrder}
+                disabled={clearingCart}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {clearingCart ? 'Placing Order...' : 'Place Order'}
               </button>
             </div>
           </div>
@@ -158,19 +172,8 @@ interface CartItemCardProps {
 }
 
 function CartItemCard({ item }: CartItemCardProps) {
-  const totalPrice = item.price * item.quantity;
-
   return (
     <div className="flex gap-4 p-4 border rounded-lg">
-      {/* Product Image */}
-      <div className="flex-shrink-0">
-        <img
-          src={item.image}
-          alt={item.name}
-          className="w-20 h-20 object-cover rounded-lg"
-        />
-      </div>
-
       {/* Product Details */}
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start">
@@ -191,7 +194,7 @@ function CartItemCard({ item }: CartItemCardProps) {
           </div>
 
           <div className="text-right">
-            <div className="font-semibold text-gray-900">${totalPrice.toFixed(2)}</div>
+            <div className="font-semibold text-gray-900">${item.total.toFixed(2)}</div>
           </div>
         </div>
       </div>

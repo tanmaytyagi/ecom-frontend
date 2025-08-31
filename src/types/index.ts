@@ -6,8 +6,7 @@
 export type {
   ApiResponse,
   Product,
-  Category,
   Cart,
   CartItem,
-  HomePageData
+  Category
 } from '@/lib/api';
