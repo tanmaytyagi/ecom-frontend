@@ -207,12 +207,24 @@ export const api = {
   // GET /home/featured
   async getFeaturedProducts(): Promise<ApiResponse<Product[]>> {
     await simulateApiDelay(400);
-    return {
-      status: "success",
-      data: mockProducts.slice(0, 4),
-      message: "featured products retrieved successfully",
-      timestamp: new Date().toISOString()
-    };
+    try {
+      const response = await fetch("http://localhost:8080/home/featuredproducts");
+      const data = await response.json();
+      return {
+        status: "success",
+        data: data,
+        message: "featured products retrieved successfully",
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error("Failed to fetch featured products", error);
+      return {
+        status: "success",
+        data: mockProducts.slice(0, 4),
+        message: "featured products retrieved successfully",
+        timestamp: new Date().toISOString()
+      };
+    }
   },
 
   // GET /home/categories
