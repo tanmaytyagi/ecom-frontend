@@ -19,7 +19,7 @@ export function ProductCard({ product }: ProductCardProps) {
     
     try {
       // Call backend API directly - backend handles all logic
-      const response = await api.updateCart(product.id, "add");
+      const response = await api.updateCart(product.productId, "add");
       
       if (response.status === "success") {
         // Success - backend updated cart
@@ -40,8 +40,8 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* Product Image */}
       <div className="aspect-square overflow-hidden">
         <img
-          src={product.image}
-          alt={product.name}
+          src={product.productImageUrl}
+          alt={product.productName}
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
         />
       </div>
@@ -49,10 +49,10 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* Product Info */}
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-          {product.name}
+          {product.productName}
         </h3>
         <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-          {product.description}
+          {product.productDescription}
         </p>
         
         {/* Error Message */}
@@ -65,7 +65,7 @@ export function ProductCard({ product }: ProductCardProps) {
         
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-gray-900">
-            ${product.price.toFixed(2)}
+            ${product.productPrice.toFixed(2)}
           </span>
           
           <button

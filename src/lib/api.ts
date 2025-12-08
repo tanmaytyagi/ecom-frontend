@@ -15,12 +15,12 @@ export interface ApiResponse<T> {
 // ============================================================================
 
 export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-  price: number;
-  category: string;
+  productId: string;
+  productName: string;
+  productDescription: string;
+  productImageUrl: string;
+  productPrice: number;
+  productCategory: string;
 }
 
 // ============================================================================
@@ -66,68 +66,68 @@ export interface Cart {
 // Mock products database
 const mockProducts: Product[] = [
   {
-    id: "aabdbb5b",
-    name: "Wireless Headphones",
-    description: "High-quality wireless headphones with noise cancellation",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
-    price: 99.99,
-    category: "Electronics"
+    productId: "aabdbb5b",
+    productName: "Wireless Headphones",
+    productDescription: "High-quality wireless headphones with noise cancellation",
+    productImageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
+    productPrice: 99.99,
+    productCategory: "Electronics"
   },
   {
-    id: "smartwatch123",
-    name: "Smart Watch",
-    description: "Feature-rich smartwatch with health tracking",
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop",
-    price: 199.99,
-    category: "Electronics"
+    productId: "smartwatch123",
+    productName: "Smart Watch",
+    productDescription: "Feature-rich smartwatch with health tracking",
+    productImageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop",
+    productPrice: 199.99,
+    productCategory: "Electronics"
   },
   {
-    id: "laptopstand456",
-    name: "Laptop Stand",
-    description: "Ergonomic laptop stand for better posture",
-    image: "https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=300&h=300&fit=crop",
-    price: 49.99,
-    category: "Electronics"
+    productId: "laptopstand456",
+    productName: "Laptop Stand",
+    productDescription: "Ergonomic laptop stand for better posture",
+    productImageUrl: "https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=300&h=300&fit=crop",
+    productPrice: 49.99,
+    productCategory: "Electronics"
   },
   {
-    id: "wirelessmouse789",
-    name: "Wireless Mouse",
-    description: "Precision wireless mouse for productivity",
-    image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=300&h=300&fit=crop",
-    price: 29.99,
-    category: "Electronics"
+    productId: "wirelessmouse789",
+    productName: "Wireless Mouse",
+    productDescription: "Precision wireless mouse for productivity",
+    productImageUrl: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=300&h=300&fit=crop",
+    productPrice: 29.99,
+    productCategory: "Electronics"
   },
   {
-    id: "tshirt101",
-    name: "T Shirt",
-    description: "Comfortable cotton t-shirt in various colors",
-    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop",
-    price: 24.99,
-    category: "Clothing"
+    productId: "tshirt101",
+    productName: "T Shirt",
+    productDescription: "Comfortable cotton t-shirt in various colors",
+    productImageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop",
+    productPrice: 24.99,
+    productCategory: "Clothing"
   },
   {
-    id: "denimjeans202",
-    name: "Denim Jeans",
-    description: "Classic denim jeans with perfect fit",
-    image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=300&fit=crop",
-    price: 79.99,
-    category: "Clothing"
+    productId: "denimjeans202",
+    productName: "Denim Jeans",
+    productDescription: "Classic denim jeans with perfect fit",
+    productImageUrl: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=300&fit=crop",
+    productPrice: 79.99,
+    productCategory: "Clothing"
   },
   {
-    id: "programmingbook303",
-    name: "Programming Book",
-    description: "Comprehensive guide to modern programming",
-    image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=300&fit=crop",
-    price: 49.99,
-    category: "Books"
+    productId: "programmingbook303",
+    productName: "Programming Book",
+    productDescription: "Comprehensive guide to modern programming",
+    productImageUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=300&fit=crop",
+    productPrice: 49.99,
+    productCategory: "Books"
   },
   {
-    id: "yogamat404",
-    name: "Yoga Mat",
-    description: "Non-slip yoga mat for home workouts",
-    image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=300&h=300&fit=crop",
-    price: 29.99,
-    category: "Sports"
+    productId: "yogamat404",
+    productName: "Yoga Mat",
+    productDescription: "Non-slip yoga mat for home workouts",
+    productImageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=300&h=300&fit=crop",
+    productPrice: 29.99,
+    productCategory: "Sports"
   }
 ];
 
@@ -242,19 +242,35 @@ export const api = {
   
   // GET /products
   async getProducts(): Promise<ApiResponse<Product[]>> {
-    await simulateApiDelay(300);
-    return {
-      status: "success",
-      data: mockProducts,
-      message: "products retrieved successfully",
-      timestamp: new Date().toISOString()
-    };
+    try {
+      const response = await fetch("http://localhost:8080/user-service/product/getAllProducts");
+      
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return {
+        status: "success",
+        data: data,
+        message: "products retrieved successfully",
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error("Failed to fetch products", error);
+      return {
+        status: "success",
+        data: mockProducts,
+        message: "products retrieved successfully",
+        timestamp: new Date().toISOString()
+      };
+    }
   },
 
   // GET /products/:category
   async getProductsByCategory(category: string): Promise<ApiResponse<Product[]>> {
     await simulateApiDelay(300);
-    const filteredProducts = mockProducts.filter(product => product.category === category);
+    const filteredProducts = mockProducts.filter(product => product.productCategory === category);
     return {
       status: "success",
       data: filteredProducts,
