@@ -225,7 +225,7 @@ export const api = {
   async getFeaturedProducts(): Promise<ApiResponse<Product[]>> {
     await simulateApiDelay(400);
     try {
-      const response = await fetch("http://localhost:8080/home/featuredproducts");
+      const response = await fetch("http://localhost:8080/user-service/product/getFeaturedProducts");
       const data = await response.json();
       return {
         status: "success",
@@ -248,7 +248,7 @@ export const api = {
   async getCategories(): Promise<ApiResponse<Category[]>> {
     await simulateApiDelay(300);
     try {
-      const response = await fetch("http://localhost:8080/home/categories");
+      const response = await fetch("http://localhost:8080/user-service/product/getAllCategories");
       const data: CategoryResponse[] = await response.json();
       
       // Map external API response to internal Category format with hardcoded images
@@ -307,13 +307,31 @@ export const api = {
   // GET /products/:category
   async getProductsByCategory(category: string): Promise<ApiResponse<Product[]>> {
     await simulateApiDelay(300);
-    const filteredProducts = mockProducts.filter(product => product.productCategory === category);
-    return {
-      status: "success",
-      data: filteredProducts,
-      message: "products retrieved successfully",
-      timestamp: new Date().toISOString()
-    };
+    try {
+      const response = await fetch(`http://localhost:8080/user-service/product/getProductsByCategory/${encodeURIComponent(category)}`);
+      
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return {
+        status: "success",
+        data: data,
+        message: "products retrieved successfully",
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error("Failed to fetch products by category", error);
+      // Fallback to mock data filtered by category
+      const filteredProducts = mockProducts.filter(product => product.productCategory === category);
+      return {
+        status: "success",
+        data: filteredProducts,
+        message: "products retrieved successfully",
+        timestamp: new Date().toISOString()
+      };
+    }
   },
 
   // ===== CART ENDPOINTS =====
