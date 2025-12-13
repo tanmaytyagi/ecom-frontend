@@ -27,11 +27,28 @@ export interface Product {
 // CATEGORY API CONTRACTS
 // ============================================================================
 
+// External API response format
+interface CategoryResponse {
+  categoryName: string;
+  totalProducts: number;
+}
+
 export interface Category {
   name: string;
   image: string;
   totalProducts: number;
 }
+
+// Category image mapping - hardcoded images based on category name
+const categoryImageMap: Record<string, string> = {
+  "Electronics": "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=300&h=200&fit=crop",
+  "Clothing": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=200&fit=crop",
+  "Books": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=200&fit=crop",
+  "Sports": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=300&h=200&fit=crop"
+};
+
+// Default image for categories not in the mapping
+const DEFAULT_CATEGORY_IMAGE = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=200&fit=crop";
 
 // ============================================================================
 // CART API CONTRACTS
@@ -230,12 +247,32 @@ export const api = {
   // GET /home/categories
   async getCategories(): Promise<ApiResponse<Category[]>> {
     await simulateApiDelay(300);
-    return {
-      status: "success",
-      data: mockCategories,
-      message: "categories retrieved successfully",
-      timestamp: new Date().toISOString()
-    };
+    try {
+      const response = await fetch("http://localhost:8080/home/categories");
+      const data: CategoryResponse[] = await response.json();
+      
+      // Map external API response to internal Category format with hardcoded images
+      const categories: Category[] = data.map((item) => ({
+        name: item.categoryName,
+        image: categoryImageMap[item.categoryName] || DEFAULT_CATEGORY_IMAGE,
+        totalProducts: item.totalProducts
+      }));
+      
+      return {
+        status: "success",
+        data: categories,
+        message: "categories retrieved successfully",
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error("Failed to fetch categories", error);
+      return {
+        status: "success",
+        data: mockCategories,
+        message: "categories retrieved successfully",
+        timestamp: new Date().toISOString()
+      };
+    }
   },
 
   // ===== PRODUCT ENDPOINTS =====
