@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 interface CartContextType {
   cartCount: number;
   loading: boolean;
+  refreshCart: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -14,7 +15,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Load cart count from backend for navigation badge
   useEffect(() => {
     loadCartCount();
   }, []);
@@ -34,9 +34,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshCart = async () => {
+    await loadCartCount();
+  };
+
   const value: CartContextType = {
     cartCount,
     loading,
+    refreshCart,
   };
 
   return (

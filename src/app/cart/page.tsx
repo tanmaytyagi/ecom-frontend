@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ShoppingBag, AlertCircle, CheckCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { Cart } from "@/lib/api";
+import { useCart } from "@/contexts/cart-context";
 import { CartCard } from "@/components/ui/cart-card";
 import { OrderSummary } from "@/components/ui/order-summary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -15,6 +16,7 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const { refreshCart } = useCart();
 
   // Load cart from backend
   useEffect(() => {
@@ -42,10 +44,9 @@ export default function CartPage() {
 
   const handleAddToCart = async (productId: string) => {
     try {
-      // Call backend API - backend handles all logic
       await api.updateCart(productId, "add");
-      // Reload entire cart from backend - no frontend state updates
       await loadCart();
+      await refreshCart();
     } catch (err) {
       console.error('Error adding to cart:', err);
       setError('Failed to add item to cart');
@@ -54,10 +55,9 @@ export default function CartPage() {
 
   const handleSubtractFromCart = async (productId: string) => {
     try {
-      // Call backend API - backend handles all logic
       await api.updateCart(productId, "subtract");
-      // Reload entire cart from backend - no frontend state updates
       await loadCart();
+      await refreshCart();
     } catch (err) {
       console.error('Error removing from cart:', err);
       setError('Failed to remove item from cart');
@@ -66,14 +66,15 @@ export default function CartPage() {
 
   const handlePlaceOrder = async () => {
     try {
-      // Call backend API - backend handles all logic
+      await api.createOrder();
       const response = await api.clearCart();
       
       if (response.status === "success") {
+        await refreshCart();
         setOrderPlaced(true);
         setTimeout(() => {
           setOrderPlaced(false);
-          loadCart(); // Reload cart to show empty state
+          loadCart();
         }, 2000);
       } else {
         setError('Failed to place order');

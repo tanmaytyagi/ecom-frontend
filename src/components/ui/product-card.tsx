@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Product } from "@/lib/api";
 import { api } from "@/lib/api";
+import { useCart } from "@/contexts/cart-context";
 import { AlertCircle } from "lucide-react";
 
 interface ProductCardProps {
@@ -12,18 +13,18 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { refreshCart } = useCart();
 
   const handleAddToCart = async () => {
     setIsAdding(true);
     setError(null);
     
     try {
-      // Call backend API directly - backend handles all logic
       const response = await api.updateCart(product.productId, "add");
       
       if (response.status === "success") {
-        // Success - backend updated cart
-        console.log('Item added to cart');
+        await refreshCart();
+        await new Promise(resolve => setTimeout(resolve, 700));
       } else {
         setError('Failed to add to cart');
       }

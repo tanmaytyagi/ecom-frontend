@@ -1,18 +1,9 @@
-// ============================================================================
-// API CONTRACTS - Exact backend contracts as specified
-// ============================================================================
-
-// Generic API Response
 export interface ApiResponse<T> {
   status: string;
   data: T;
   message: string;
   timestamp: string;
 }
-
-// ============================================================================
-// PRODUCT API CONTRACTS
-// ============================================================================
 
 export interface Product {
   productId: string;
@@ -23,11 +14,6 @@ export interface Product {
   productCategory: string;
 }
 
-// ============================================================================
-// CATEGORY API CONTRACTS
-// ============================================================================
-
-// External API response format
 interface CategoryResponse {
   categoryName: string;
   totalProducts: number;
@@ -39,7 +25,6 @@ export interface Category {
   totalProducts: number;
 }
 
-// Category image mapping - hardcoded images based on category name
 const categoryImageMap: Record<string, string> = {
   "Electronics": "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=300&h=200&fit=crop",
   "Clothing": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=200&fit=crop",
@@ -47,20 +32,16 @@ const categoryImageMap: Record<string, string> = {
   "Sports": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=300&h=200&fit=crop"
 };
 
-// Default image for categories not in the mapping
 const DEFAULT_CATEGORY_IMAGE = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=200&fit=crop";
 
-// ============================================================================
-// CART API CONTRACTS
-// ============================================================================
-
 export interface CartItem {
+  id: string;
   productId: string;
-  name: string;
-  category: string;
-  price: number;
-  total: number;
+  productName: string;
+  productCategory: string | null;
   quantity: number;
+  productPrice: number;
+  totalPrice: number;
 }
 
 export interface OrderSummary {
@@ -76,11 +57,6 @@ export interface Cart {
   totalItems: number;
 }
 
-// ============================================================================
-// MOCK DATA STORAGE (Simulates Database)
-// ============================================================================
-
-// Mock products database
 const mockProducts: Product[] = [
   {
     productId: "aabdbb5b",
@@ -148,7 +124,6 @@ const mockProducts: Product[] = [
   }
 ];
 
-// Mock categories database
 const mockCategories: Category[] = [
   {
     name: "Electronics",
@@ -172,7 +147,6 @@ const mockCategories: Category[] = [
   }
 ];
 
-// Mock cart storage (simulates user session/database)
 let mockCart: Cart = {
   cartItems: [],
   orderSummary: {
@@ -184,16 +158,10 @@ let mockCart: Cart = {
   totalItems: 0
 };
 
-// ============================================================================
-// BACKEND API SIMULATION (Replace with real HTTP calls)
-// ============================================================================
-
-// Helper function to simulate API delay
 const simulateApiDelay = (ms: number = 200) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Helper function to calculate cart totals (Backend logic)
 const calculateCartTotals = (items: CartItem[]) => {
-  const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+  const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
   const taxPercentage = 18;
   const taxAmount = subtotal * (taxPercentage / 100);
   const total = subtotal + taxAmount;
@@ -206,7 +174,6 @@ const calculateCartTotals = (items: CartItem[]) => {
   };
 };
 
-// Helper function to update cart (Backend logic)
 const updateCart = (items: CartItem[]) => {
   const orderSummary = calculateCartTotals(items);
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -219,13 +186,10 @@ const updateCart = (items: CartItem[]) => {
 };
 
 export const api = {
-  // ===== HOMEPAGE ENDPOINTS =====
-  
-  // GET /home/featured
   async getFeaturedProducts(): Promise<ApiResponse<Product[]>> {
     await simulateApiDelay(400);
     try {
-      const response = await fetch("http://localhost:8080/user-service/product/getFeaturedProducts");
+      const response = await fetch("http://localhost:8080/api/product/getFeaturedProducts");
       const data = await response.json();
       return {
         status: "success",
@@ -244,14 +208,12 @@ export const api = {
     }
   },
 
-  // GET /home/categories
   async getCategories(): Promise<ApiResponse<Category[]>> {
     await simulateApiDelay(300);
     try {
-      const response = await fetch("http://localhost:8080/user-service/product/getAllCategories");
+      const response = await fetch("http://localhost:8080/api/product/getAllCategories");
       const data: CategoryResponse[] = await response.json();
       
-      // Map external API response to internal Category format with hardcoded images
       const categories: Category[] = data.map((item) => ({
         name: item.categoryName,
         image: categoryImageMap[item.categoryName] || DEFAULT_CATEGORY_IMAGE,
@@ -275,12 +237,9 @@ export const api = {
     }
   },
 
-  // ===== PRODUCT ENDPOINTS =====
-  
-  // GET /products
   async getProducts(): Promise<ApiResponse<Product[]>> {
     try {
-      const response = await fetch("http://localhost:8080/user-service/product/getAllProducts");
+      const response = await fetch("http://localhost:8080/api/product/getAllProducts");
       
       if (!response.ok) {
         throw new Error(`API returned ${response.status}: ${response.statusText}`);
@@ -304,11 +263,10 @@ export const api = {
     }
   },
 
-  // GET /products/:category
   async getProductsByCategory(category: string): Promise<ApiResponse<Product[]>> {
     await simulateApiDelay(300);
     try {
-      const response = await fetch(`http://localhost:8080/user-service/product/getProductsByCategory/${encodeURIComponent(category)}`);
+      const response = await fetch(`http://localhost:8080/api/product/getProductsByCategory/${encodeURIComponent(category)}`);
       
       if (!response.ok) {
         throw new Error(`API returned ${response.status}: ${response.statusText}`);
@@ -323,7 +281,6 @@ export const api = {
       };
     } catch (error) {
       console.error("Failed to fetch products by category", error);
-      // Fallback to mock data filtered by category
       const filteredProducts = mockProducts.filter(product => product.productCategory === category);
       return {
         status: "success",
@@ -334,112 +291,150 @@ export const api = {
     }
   },
 
-  // ===== CART ENDPOINTS =====
-  
-  // GET /cart
   async getCart(): Promise<ApiResponse<Cart>> {
-    await simulateApiDelay(200);
-    
-    // For static demo - always return the same cart data
-    const staticCart: Cart = {
-      cartItems: [
-        {
-          productId: "laptopstand456",
-          name: "Laptop Stand",
-          category: "Electronics",
-          price: 49.99,
-          total: 649.87,
-          quantity: 13
+    try {
+      const response = await fetch("http://localhost:8080/api/cart/getCart");
+      
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      return {
+        status: "success",
+        data: data,
+        message: "cart items retrieved successfully",
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error("Failed to fetch cart", error);
+      return {
+        status: "success",
+        data: {
+          cartItems: [],
+          orderSummary: {
+            subtotal: 0,
+            taxPercentage: 18,
+            taxAmount: 0,
+            total: 0
+          },
+          totalItems: 0
         },
-        {
-          productId: "wirelessmouse789",
-          name: "Wireless Mouse",
-          category: "Electronics",
-          price: 29.99,
-          total: 29.99,
-          quantity: 1
-        }
-      ],
-      orderSummary: {
-        subtotal: 679.86,
-        taxPercentage: 18,
-        taxAmount: 122.37,
-        total: 802.23
-      },
-      totalItems: 14
-    };
-    
-    return {
-      status: "success",
-      data: staticCart,
-      message: "cart items retrieved successfully",
-      timestamp: new Date().toISOString()
-    };
+        message: "cart items retrieved successfully",
+        timestamp: new Date().toISOString()
+      };
+    }
   },
 
-  // POST /cart
+  async addToCart(productId: string): Promise<ApiResponse<Cart>> {
+    try {
+      const response = await fetch(`http://localhost:8080/api/cart/addItem/${productId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      return {
+        status: "success",
+        data: data,
+        message: "item added to cart successfully",
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error("Failed to add item to cart", error);
+      throw error;
+    }
+  },
+
+  async removeFromCart(productId: string): Promise<ApiResponse<Cart>> {
+    try {
+      const response = await fetch(`http://localhost:8080/api/cart/removeItem/${productId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      return {
+        status: "success",
+        data: data,
+        message: "item removed from cart successfully",
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error("Failed to remove item from cart", error);
+      throw error;
+    }
+  },
+
   async updateCart(productId: string, action: "add" | "subtract"): Promise<ApiResponse<Cart>> {
-    await simulateApiDelay(300);
-    
-    // For static demo - always return the same cart data
-    // In real backend, this would update the cart and return updated data
-    const staticCart: Cart = {
-      cartItems: [
-        {
-          productId: "laptopstand456",
-          name: "Laptop Stand",
-          category: "Electronics",
-          price: 49.99,
-          total: 649.87,
-          quantity: 13
-        },
-        {
-          productId: "wirelessmouse789",
-          name: "Wireless Mouse",
-          category: "Electronics",
-          price: 29.99,
-          total: 29.99,
-          quantity: 1
-        }
-      ],
-      orderSummary: {
-        subtotal: 679.86,
-        taxPercentage: 18,
-        taxAmount: 122.37,
-        total: 802.23
-      },
-      totalItems: 14
-    };
-    
-    return {
-      status: "success",
-      data: staticCart,
-      message: "cart items retrieved successfully",
-      timestamp: new Date().toISOString()
-    };
+    if (action === "add") {
+      return this.addToCart(productId);
+    } else {
+      return this.removeFromCart(productId);
+    }
   },
 
-  // GET /cart/clearcart
-  async clearCart(): Promise<ApiResponse<any>> {
-    await simulateApiDelay(200);
-    
-    // Backend clears cart
-    mockCart = {
-      cartItems: [],
-      orderSummary: {
-        subtotal: 0,
-        taxPercentage: 18,
-        taxAmount: 0,
-        total: 0
-      },
-      totalItems: 0
-    };
-    
-    return {
-      status: "success",
-      data: [],
-      message: "cart cleared successfully",
-      timestamp: new Date().toISOString()
-    };
+  async clearCart(): Promise<ApiResponse<Cart>> {
+    try {
+      const response = await fetch("http://localhost:8080/api/cart/getCart", {
+        method: "GET",
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      return {
+        status: "success",
+        data: data,
+        message: "cart cleared successfully",
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error("Failed to clear cart", error);
+      throw error;
+    }
+  },
+
+  async createOrder(): Promise<ApiResponse<any>> {
+    try {
+      const response = await fetch("http://localhost:8080/api/order/createOrder", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+      }
+      
+      return {
+        status: "success",
+        data: {},
+        message: "order created successfully",
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error("Failed to create order", error);
+      throw error;
+    }
   }
 };
