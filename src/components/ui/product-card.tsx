@@ -38,7 +38,6 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200">
-      {/* Product Image */}
       <div className="aspect-square overflow-hidden">
         <img
           src={product.productImageUrl}
@@ -47,7 +46,6 @@ export function ProductCard({ product }: ProductCardProps) {
         />
       </div>
       
-      {/* Product Info */}
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
           {product.productName}
@@ -56,7 +54,6 @@ export function ProductCard({ product }: ProductCardProps) {
           {product.productDescription}
         </p>
         
-        {/* Error Message */}
         {error && (
           <div className="flex items-center gap-2 text-red-600 text-sm mb-2">
             <AlertCircle className="h-4 w-4" />

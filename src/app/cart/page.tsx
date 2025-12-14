@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ShoppingBag, AlertCircle, CheckCircle } from "lucide-react";
+import { ShoppingBag, CheckCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { Cart } from "@/lib/api";
 import { useCart } from "@/contexts/cart-context";
@@ -18,7 +18,6 @@ export default function CartPage() {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const { refreshCart } = useCart();
 
-  // Load cart from backend
   useEffect(() => {
     loadCart();
   }, []);
@@ -45,8 +44,7 @@ export default function CartPage() {
   const handleAddToCart = async (productId: string) => {
     try {
       await api.updateCart(productId, "add");
-      await loadCart();
-      await refreshCart();
+      await Promise.all([loadCart(), refreshCart()]);
     } catch (err) {
       console.error('Error adding to cart:', err);
       setError('Failed to add item to cart');
@@ -56,8 +54,7 @@ export default function CartPage() {
   const handleSubtractFromCart = async (productId: string) => {
     try {
       await api.updateCart(productId, "subtract");
-      await loadCart();
-      await refreshCart();
+      await Promise.all([loadCart(), refreshCart()]);
     } catch (err) {
       console.error('Error removing from cart:', err);
       setError('Failed to remove item from cart');
@@ -164,5 +161,3 @@ export default function CartPage() {
     </div>
   );
 }
-
-

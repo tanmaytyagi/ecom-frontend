@@ -11,12 +11,10 @@ export function Navigation() {
     <nav className="border-b bg-white sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
           <Link href="/" className="text-xl font-bold text-gray-900">
             TechStore
           </Link>
           
-          {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
             <Link 
               href="/" 
@@ -32,7 +30,6 @@ export function Navigation() {
             </Link>
           </div>
 
-          {/* Cart Icon */}
           <Link href="/cart">
             <div className="relative cursor-pointer">
               <ShoppingCart className="h-6 w-6 text-gray-600 hover:text-gray-900 transition-colors" />

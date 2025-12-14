@@ -1,3 +1,5 @@
+const API_BASE_URL = "http://localhost:8080/api";
+
 export interface ApiResponse<T> {
   status: string;
   data: T;
@@ -25,15 +27,6 @@ export interface Category {
   totalProducts: number;
 }
 
-const categoryImageMap: Record<string, string> = {
-  "Electronics": "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=300&h=200&fit=crop",
-  "Clothing": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=200&fit=crop",
-  "Books": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=200&fit=crop",
-  "Sports": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=300&h=200&fit=crop"
-};
-
-const DEFAULT_CATEGORY_IMAGE = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=200&fit=crop";
-
 export interface CartItem {
   id: string;
   productId: string;
@@ -56,6 +49,15 @@ export interface Cart {
   orderSummary: OrderSummary;
   totalItems: number;
 }
+
+const categoryImageMap: Record<string, string> = {
+  "Electronics": "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=300&h=200&fit=crop",
+  "Clothing": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=200&fit=crop",
+  "Books": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=200&fit=crop",
+  "Sports": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=300&h=200&fit=crop"
+};
+
+const DEFAULT_CATEGORY_IMAGE = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=200&fit=crop";
 
 const mockProducts: Product[] = [
   {
@@ -147,7 +149,7 @@ const mockCategories: Category[] = [
   }
 ];
 
-let mockCart: Cart = {
+const emptyCart: Cart = {
   cartItems: [],
   orderSummary: {
     subtotal: 0,
@@ -158,38 +160,10 @@ let mockCart: Cart = {
   totalItems: 0
 };
 
-const simulateApiDelay = (ms: number = 200) => new Promise(resolve => setTimeout(resolve, ms));
-
-const calculateCartTotals = (items: CartItem[]) => {
-  const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
-  const taxPercentage = 18;
-  const taxAmount = subtotal * (taxPercentage / 100);
-  const total = subtotal + taxAmount;
-
-  return {
-    subtotal: Math.round(subtotal * 100) / 100,
-    taxPercentage,
-    taxAmount: Math.round(taxAmount * 100) / 100,
-    total: Math.round(total * 100) / 100
-  };
-};
-
-const updateCart = (items: CartItem[]) => {
-  const orderSummary = calculateCartTotals(items);
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  mockCart = {
-    cartItems: items,
-    orderSummary,
-    totalItems
-  };
-  return mockCart;
-};
-
 export const api = {
   async getFeaturedProducts(): Promise<ApiResponse<Product[]>> {
-    await simulateApiDelay(400);
     try {
-      const response = await fetch("http://localhost:8080/api/product/getFeaturedProducts");
+      const response = await fetch(`${API_BASE_URL}/product/getFeaturedProducts`);
       const data = await response.json();
       return {
         status: "success",
@@ -209,9 +183,8 @@ export const api = {
   },
 
   async getCategories(): Promise<ApiResponse<Category[]>> {
-    await simulateApiDelay(300);
     try {
-      const response = await fetch("http://localhost:8080/api/product/getAllCategories");
+      const response = await fetch(`${API_BASE_URL}/product/getAllCategories`);
       const data: CategoryResponse[] = await response.json();
       
       const categories: Category[] = data.map((item) => ({
@@ -239,7 +212,7 @@ export const api = {
 
   async getProducts(): Promise<ApiResponse<Product[]>> {
     try {
-      const response = await fetch("http://localhost:8080/api/product/getAllProducts");
+      const response = await fetch(`${API_BASE_URL}/product/getAllProducts`);
       
       if (!response.ok) {
         throw new Error(`API returned ${response.status}: ${response.statusText}`);
@@ -264,9 +237,8 @@ export const api = {
   },
 
   async getProductsByCategory(category: string): Promise<ApiResponse<Product[]>> {
-    await simulateApiDelay(300);
     try {
-      const response = await fetch(`http://localhost:8080/api/product/getProductsByCategory/${encodeURIComponent(category)}`);
+      const response = await fetch(`${API_BASE_URL}/product/getProductsByCategory/${encodeURIComponent(category)}`);
       
       if (!response.ok) {
         throw new Error(`API returned ${response.status}: ${response.statusText}`);
@@ -293,14 +265,13 @@ export const api = {
 
   async getCart(): Promise<ApiResponse<Cart>> {
     try {
-      const response = await fetch("http://localhost:8080/api/cart/getCart");
+      const response = await fetch(`${API_BASE_URL}/cart/getCart`);
       
       if (!response.ok) {
         throw new Error(`API returned ${response.status}: ${response.statusText}`);
       }
       
       const data = await response.json();
-      
       return {
         status: "success",
         data: data,
@@ -311,16 +282,7 @@ export const api = {
       console.error("Failed to fetch cart", error);
       return {
         status: "success",
-        data: {
-          cartItems: [],
-          orderSummary: {
-            subtotal: 0,
-            taxPercentage: 18,
-            taxAmount: 0,
-            total: 0
-          },
-          totalItems: 0
-        },
+        data: emptyCart,
         message: "cart items retrieved successfully",
         timestamp: new Date().toISOString()
       };
@@ -328,113 +290,78 @@ export const api = {
   },
 
   async addToCart(productId: string): Promise<ApiResponse<Cart>> {
-    try {
-      const response = await fetch(`http://localhost:8080/api/cart/addItem/${productId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      return {
-        status: "success",
-        data: data,
-        message: "item added to cart successfully",
-        timestamp: new Date().toISOString()
-      };
-    } catch (error) {
-      console.error("Failed to add item to cart", error);
-      throw error;
+    const response = await fetch(`${API_BASE_URL}/cart/addItem/${productId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}: ${response.statusText}`);
     }
+    
+    const data = await response.json();
+    return {
+      status: "success",
+      data: data,
+      message: "item added to cart successfully",
+      timestamp: new Date().toISOString()
+    };
   },
 
   async removeFromCart(productId: string): Promise<ApiResponse<Cart>> {
-    try {
-      const response = await fetch(`http://localhost:8080/api/cart/removeItem/${productId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      return {
-        status: "success",
-        data: data,
-        message: "item removed from cart successfully",
-        timestamp: new Date().toISOString()
-      };
-    } catch (error) {
-      console.error("Failed to remove item from cart", error);
-      throw error;
+    const response = await fetch(`${API_BASE_URL}/cart/removeItem/${productId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}: ${response.statusText}`);
     }
+    
+    const data = await response.json();
+    return {
+      status: "success",
+      data: data,
+      message: "item removed from cart successfully",
+      timestamp: new Date().toISOString()
+    };
   },
 
   async updateCart(productId: string, action: "add" | "subtract"): Promise<ApiResponse<Cart>> {
-    if (action === "add") {
-      return this.addToCart(productId);
-    } else {
-      return this.removeFromCart(productId);
-    }
+    return action === "add" ? this.addToCart(productId) : this.removeFromCart(productId);
   },
 
   async clearCart(): Promise<ApiResponse<Cart>> {
-    try {
-      const response = await fetch("http://localhost:8080/api/cart/getCart", {
-        method: "GET",
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      return {
-        status: "success",
-        data: data,
-        message: "cart cleared successfully",
-        timestamp: new Date().toISOString()
-      };
-    } catch (error) {
-      console.error("Failed to clear cart", error);
-      throw error;
+    const response = await fetch(`${API_BASE_URL}/cart/getCart`);
+    
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}: ${response.statusText}`);
     }
+    
+    const data = await response.json();
+    return {
+      status: "success",
+      data: data,
+      message: "cart cleared successfully",
+      timestamp: new Date().toISOString()
+    };
   },
 
   async createOrder(): Promise<ApiResponse<any>> {
-    try {
-      const response = await fetch("http://localhost:8080/api/order/createOrder", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status}: ${response.statusText}`);
-      }
-      
-      return {
-        status: "success",
-        data: {},
-        message: "order created successfully",
-        timestamp: new Date().toISOString()
-      };
-    } catch (error) {
-      console.error("Failed to create order", error);
-      throw error;
+    const response = await fetch(`${API_BASE_URL}/order/createOrder`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}: ${response.statusText}`);
     }
+    
+    return {
+      status: "success",
+      data: {},
+      message: "order created successfully",
+      timestamp: new Date().toISOString()
+    };
   }
 };

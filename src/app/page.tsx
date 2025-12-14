@@ -18,7 +18,6 @@ export default function HomePage() {
     async function loadHomePageData() {
       try {
         setError(null);
-        // Call backend APIs - backend returns all homepage data
         const [featuredResponse, categoriesResponse] = await Promise.all([
           api.getFeaturedProducts(),
           api.getCategories()
@@ -78,7 +77,6 @@ export default function HomePage() {
 
   return (
     <div className="bg-gray-50">
-      {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-16">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
@@ -95,7 +93,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Featured Products */}
       <div className="py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -119,7 +116,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Categories */}
       <div className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
